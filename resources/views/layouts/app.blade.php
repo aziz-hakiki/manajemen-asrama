@@ -7,6 +7,10 @@
 
         <title>{{ config('app.name', 'Asrama PPSDMAP') }}</title>
 
+        <!-- Favicon / Icon Title -->
+        <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo.png') }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,7 +61,10 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
                         </button>
-                        <span class="font-bold text-slate-800 tracking-tight text-sm sm:text-base">Asrama PPSDMAP</span>
+                        <div class="flex items-center gap-2">
+                            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-7 w-auto object-contain">
+                            <span class="font-bold text-slate-800 tracking-tight text-sm sm:text-base">Asrama PPSDMAP</span>
+                        </div>
                     </div>
 
                     <!-- Desktop Header Left Content (Title / Breadcrumb) -->

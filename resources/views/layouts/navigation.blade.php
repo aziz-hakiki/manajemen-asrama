@@ -4,15 +4,11 @@
     class="fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 transition-transform duration-200 ease-in-out md:translate-x-0 shadow-lg md:shadow-none"
 >
     <!-- Logo & Brand Header -->
-    <div class="h-16 flex items-center justify-between px-6 border-b border-slate-200 shrink-0">
+    <div class="h-16 flex items-center justify-between px-5 border-b border-slate-200 shrink-0">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-            </div>
+            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-9 w-auto object-contain">
             <div class="flex flex-col">
-                <span class="font-bold text-slate-800 text-base leading-tight">Asrama App</span>
+                <span class="font-bold text-slate-800 text-sm leading-tight">Asrama App</span>
                 <span class="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider">PPSDMAP</span>
             </div>
         </a>

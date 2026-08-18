@@ -7,6 +7,10 @@
 
         <title>{{ config('app.name', 'Asrama PPSDMAP') }}</title>
 
+        <!-- Favicon / Icon Title -->
+        <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo.png') }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
