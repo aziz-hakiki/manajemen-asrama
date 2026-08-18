@@ -181,7 +181,7 @@
                 <p class="text-xs text-slate-500 mb-5">Akses cepat menu pengelolaan master data asrama</p>
 
                 <div class="space-y-3">
-                    <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 group transition-all">
+                    <a href="{{ route('admin.gedung.create') }}" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 group transition-all">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +198,7 @@
                         </svg>
                     </a>
 
-                    <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 group transition-all">
+                    <a href="{{ route('admin.kamar.create') }}" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 group transition-all">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,7 +215,7 @@
                         </svg>
                     </a>
 
-                    <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 group transition-all">
+                    <a href="{{ route('admin.peserta.import') }}" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 group transition-all">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,7 +224,7 @@
                             </div>
                             <div>
                                 <h4 class="text-xs font-bold text-slate-800 group-hover:text-indigo-700">Import Data Peserta</h4>
-                                <p class="text-[11px] text-slate-400">Unggah dari file Excel/CSV</p>
+                                <p class="text-[11px] text-slate-400">Unggah dari file CSV</p>
                             </div>
                         </div>
                         <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
