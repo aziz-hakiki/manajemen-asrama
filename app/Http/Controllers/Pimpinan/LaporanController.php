@@ -70,9 +70,15 @@ class LaporanController extends Controller
                 $sub->whereHas('peserta', function ($q) use ($search) {
                     $q->where('nama_peserta', 'like', "%{$search}%")
                       ->orWhere('nip_nik', 'like', "%{$search}%")
-                      ->orWhere('instansi', 'like', "%{$search}%");
+                      ->orWhere('instansi', 'like', "%{$search}%")
+                      ->orWhereHas('diklat', function ($d) use ($search) {
+                          $d->where('nama_diklat', 'like', "%{$search}%");
+                      });
                 })->orWhereHas('kamar', function ($q) use ($search) {
-                    $q->where('nomor_kamar', 'like', "%{$search}%");
+                    $q->where('nomor_kamar', 'like', "%{$search}%")
+                      ->orWhereHas('gedung', function ($g) use ($search) {
+                          $g->where('nama_gedung', 'like', "%{$search}%");
+                      });
                 });
             });
         }

@@ -24,9 +24,29 @@
 
     <x-alert />
 
+    @php
+        $isAdmin = auth()->user()->role === 'admin';
+        $routeHunian = $isAdmin ? route('admin.laporan.index') : route('pimpinan.laporan.hunian');
+        $routeGedung = $isAdmin ? route('admin.laporan.gedung') : route('pimpinan.laporan.gedung');
+        $routeDiklat = $isAdmin ? route('admin.laporan.diklat') : route('pimpinan.laporan.diklat');
+    @endphp
+
+    <!-- Sub Navigation Tabs for Reports -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-1">
+        <a href="{{ $routeHunian }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('*laporan.index') || request()->routeIs('*laporan.hunian') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+            <span>📊 Laporan Hunian</span>
+        </a>
+        <a href="{{ $routeGedung }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('*laporan.gedung') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+            <span>🏢 Laporan Per Gedung</span>
+        </a>
+        <a href="{{ $routeDiklat }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('*laporan.diklat') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+            <span>🎓 Laporan Per Diklat</span>
+        </a>
+    </div>
+
     <!-- Filter Bar Card -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5">
-        <form method="GET" action="{{ route('pimpinan.laporan.hunian') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
+        <form method="GET" action="{{ url()->current() }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
             <!-- Search -->
             <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Pencarian</label>
@@ -34,7 +54,7 @@
                     type="text" 
                     name="search" 
                     value="{{ request('search') }}" 
-                    placeholder="Nama, NIP, Kamar..." 
+                    placeholder="Nama, NIP, Kamar, Diklat..." 
                     class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-xs transition-all"
                 >
             </div>
@@ -77,7 +97,7 @@
                     Terapkan Filter
                 </button>
                 @if(request()->hasAny(['search', 'start_date', 'end_date', 'status']))
-                    <a href="{{ route('pimpinan.laporan.hunian') }}" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold transition-colors" title="Reset Filter">
+                    <a href="{{ url()->current() }}" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold transition-colors" title="Reset Filter">
                         Reset
                     </a>
                 @endif

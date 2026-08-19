@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\KamarController;
 use App\Http\Controllers\Admin\DiklatController;
 use App\Http\Controllers\Admin\PesertaController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Pimpinan\LaporanController;
 
 // Resepsionis Controllers
 use App\Http\Controllers\Resepsionis\CheckInController;
@@ -87,6 +88,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Laporan untuk Admin
     Route::get('laporan', [LaporanController::class, 'laporanHunian'])->name('laporan.index');
+    Route::get('laporan-gedung', [LaporanController::class, 'laporanPerGedung'])->name('laporan.gedung');
+    Route::get('laporan-diklat', [LaporanController::class, 'laporanPerDiklat'])->name('laporan.diklat');
 });
 
 // Resepsionis Routes
@@ -138,8 +141,6 @@ Route::middleware(['auth', 'role:resepsionis'])->prefix('resepsionis')->name('re
 });
 
 // Pimpinan Routes
-use App\Http\Controllers\Pimpinan\LaporanController;
-
 Route::middleware(['auth', 'role:pimpinan'])->prefix('pimpinan')->name('pimpinan.')->group(function () {
     Route::get('/dashboard', [LaporanController::class, 'dashboard'])->name('dashboard');
     Route::get('/laporan-hunian', [LaporanController::class, 'laporanHunian'])->name('laporan.hunian');

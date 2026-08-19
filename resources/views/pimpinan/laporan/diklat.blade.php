@@ -16,6 +16,26 @@
 
     <x-alert />
 
+    @php
+        $isAdmin = auth()->user()->role === 'admin';
+        $routeHunian = $isAdmin ? route('admin.laporan.index') : route('pimpinan.laporan.hunian');
+        $routeGedung = $isAdmin ? route('admin.laporan.gedung') : route('pimpinan.laporan.gedung');
+        $routeDiklat = $isAdmin ? route('admin.laporan.diklat') : route('pimpinan.laporan.diklat');
+    @endphp
+
+    <!-- Sub Navigation Tabs for Reports -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-1">
+        <a href="{{ $routeHunian }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('*laporan.index') || request()->routeIs('*laporan.hunian') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+            <span>📊 Laporan Hunian</span>
+        </a>
+        <a href="{{ $routeGedung }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('*laporan.gedung') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+            <span>🏢 Laporan Per Gedung</span>
+        </a>
+        <a href="{{ $routeDiklat }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all {{ request()->routeIs('*laporan.diklat') ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+            <span>🎓 Laporan Per Diklat</span>
+        </a>
+    </div>
+
     <!-- Rekapitulasi Program Diklat Card -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div class="p-5 border-b border-slate-100">
@@ -70,7 +90,7 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <a href="{{ route('pimpinan.laporan.diklat', ['diklat_id' => $diklat->id]) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                                <a href="{{ $routeDiklat }}?diklat_id={{ $diklat->id }}" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
                                     <span>Lihat Peserta</span>
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                 </a>
@@ -96,7 +116,7 @@
                     <h3 class="text-base font-bold text-slate-800">Daftar Peserta & Kamar: {{ $selectedDiklat->nama_diklat }}</h3>
                     <p class="text-xs text-slate-500 mt-0.5">Rincian status menginap masing-masing peserta diklat</p>
                 </div>
-                <a href="{{ route('pimpinan.laporan.diklat') }}" class="text-xs text-slate-500 hover:text-slate-800 font-semibold">
+                <a href="{{ $routeDiklat }}" class="text-xs text-slate-500 hover:text-slate-800 font-semibold">
                     &times; Tutup Rincian
                 </a>
             </div>
