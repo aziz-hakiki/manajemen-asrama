@@ -38,6 +38,7 @@ class CheckOutController extends Controller
 
         $namaPeserta = $transaksi->peserta->nama_peserta ?? 'Peserta';
         $kamar = $transaksi->kamar;
+        $nomorKamar = $kamar->nomor_kamar ?? '-';
         $remainingOccupants = 0;
 
         DB::transaction(function () use ($transaksi, $kamar, &$remainingOccupants) {

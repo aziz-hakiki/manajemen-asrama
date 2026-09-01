@@ -91,7 +91,7 @@ class LaporanController extends Controller
         $transaksis = $query->latest('tanggal_masuk')->paginate(15)->withQueryString();
 
         $totalKamar = Kamar::count();
-        $kamarTerisi = Kamar::where('status', 'terisi')->count();
+        $kamarTerisi = Kamar::whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0')->count();
         $penghuniAktif = TransaksiAsrama::where('status', 'menginap')->count();
         $totalSelesai = TransaksiAsrama::where('status', 'selesai')->count();
 
