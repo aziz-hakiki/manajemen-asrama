@@ -99,7 +99,8 @@
                 $isKosong = $terisi === 0;
             @endphp
 
-            <div class="bg-white rounded-2xl border {{ $isKosong ? 'border-emerald-200 hover:border-emerald-400' : ($isFull ? 'border-rose-200 bg-rose-50/10' : 'border-orange-200 hover:border-orange-400') }} p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+            <div class="bg-white rounded-2xl border p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between" 
+                 style="{{ $isKosong ? 'border-color: #a7f3d0;' : ($isFull ? 'border-color: #fecdd3; background-color: rgba(255, 241, 242, 0.2);' : 'border-color: #fdba74;') }}">
                 <div>
                     <!-- Header Card: Gedung & Status Badge -->
                     <div class="flex items-center justify-between mb-3">
@@ -108,17 +109,20 @@
                         </span>
                         
                         @if($isKosong)
-                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                                  style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                 Kosong
                             </span>
                         @elseif(!$isFull)
-                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                                  style="background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;">
                                 <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
                                 {{ $terisi }} Terisi
                             </span>
                         @else
-                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                                  style="background-color: #fff1f2; color: #be123c; border: 1px solid #fecdd3;">
                                 <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                                 3 Terisi (Penuh)
                             </span>
@@ -138,7 +142,7 @@
                                 </svg>
                                 <span>Kapasitas: <strong>{{ $kapasitas }} Orang</strong></span>
                             </span>
-                            <span class="font-medium {{ $isKosong ? 'text-emerald-600' : ($isFull ? 'text-rose-600' : 'text-orange-600') }}">
+                            <span class="font-semibold" style="{{ $isKosong ? 'color: #059669;' : ($isFull ? 'color: #e11d48;' : 'color: #ea580c;') }}">
                                 {{ $terisi }}/{{ $kapasitas }} Terisi
                             </span>
                         </div>
@@ -147,7 +151,9 @@
                         <div class="mt-2.5 flex items-center gap-1.5">
                             @for($i = 1; $i <= $kapasitas; $i++)
                                 @if($i <= $terisi)
-                                    <div class="flex-1 h-1.5 rounded-full {{ $isFull ? 'bg-rose-500' : 'bg-orange-500' }}" title="Slot {{ $i }}: Terisi"></div>
+                                    <div class="flex-1 h-1.5 rounded-full" 
+                                         style="{{ $isFull ? 'background-color: #f43f5e;' : 'background-color: #f97316;' }}" 
+                                         title="Slot {{ $i }}: Terisi"></div>
                                 @else
                                     <div class="flex-1 h-1.5 rounded-full bg-slate-200" title="Slot {{ $i }}: Kosong"></div>
                                 @endif
@@ -160,7 +166,7 @@
                                 <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">Penghuni Aktif:</span>
                                 @foreach($kamar->activeTransaksi as $tr)
                                     <div class="text-[11px] text-slate-600 truncate flex items-center gap-1" title="{{ $tr->peserta->nama_peserta ?? '' }}">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
                                         <span class="font-medium text-slate-700 truncate">{{ $tr->peserta->nama_peserta ?? '-' }}</span>
                                     </div>
                                 @endforeach
@@ -173,7 +179,9 @@
                 <div class="mt-4 pt-4 border-t border-slate-100">
                     @if($isKosong)
                         <!-- 0 Terisi: Hijau -->
-                        <a href="{{ route('resepsionis.checkin.create', ['kamar_id' => $kamar->id]) }}" class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs transition-colors">
+                        <a href="{{ route('resepsionis.checkin.create', ['kamar_id' => $kamar->id]) }}" 
+                           style="background-color: #059669; color: #ffffff;"
+                           class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl hover:opacity-90 font-semibold text-xs shadow-xs transition-opacity">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                             </svg>
@@ -181,7 +189,9 @@
                         </a>
                     @elseif(!$isFull)
                         <!-- 1 atau 2 Terisi: Orange -->
-                        <a href="{{ route('resepsionis.checkin.create', ['kamar_id' => $kamar->id]) }}" class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs shadow-xs transition-colors">
+                        <a href="{{ route('resepsionis.checkin.create', ['kamar_id' => $kamar->id]) }}" 
+                           style="background-color: #f97316; color: #ffffff;"
+                           class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl hover:opacity-90 font-semibold text-xs shadow-xs transition-opacity">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                             </svg>
@@ -189,7 +199,9 @@
                         </a>
                     @else
                         <!-- 3 Terisi: Merah Disabled -->
-                        <button type="button" disabled class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-rose-600 text-white font-semibold text-xs shadow-xs opacity-75 cursor-not-allowed">
+                        <button type="button" disabled 
+                                style="background-color: #e11d48; color: #ffffff;"
+                                class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-semibold text-xs shadow-xs opacity-75 cursor-not-allowed">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                             </svg>
