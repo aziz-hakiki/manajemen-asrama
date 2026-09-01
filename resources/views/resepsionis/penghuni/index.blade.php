@@ -92,14 +92,14 @@
                         <th class="px-6 py-4">Program Diklat</th>
                         <th class="px-6 py-4">Alokasi Kamar</th>
                         <th class="px-6 py-4">Waktu Check-in</th>
-                        <th class="px-6 py-4">Lama Menginap</th>
-                        <th class="px-6 py-4 text-right">Aksi</th>
+                        <!-- <th class="px-6 py-4">Lama Menginap</th> -->
+                        <!-- <th class="px-6 py-4 text-center">Aksi</th> -->
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($penghunis as $index => $transaksi)
                         @php
-                            $tglMasuk = \Carbon\Carbon::parse($transaksi->tanggal_masuk);
+                            $tglMasuk = \Carbon\Carbon::parse($transaksi->tanggal_masuk)->locale('id');
                             $durasi = $tglMasuk->diffForHumans(now(), [
                                 'parts' => 2,
                                 'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE
@@ -134,12 +134,12 @@
                             <td class="px-6 py-4 text-xs text-slate-600">
                                 {{ $tglMasuk->translatedFormat('d M Y, H:i') }}
                             </td>
-                            <td class="px-6 py-4">
+                            <!-- <td class="px-6 py-4">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
                                     {{ $durasi }}
                                 </span>
-                            </td>
-                            <td class="px-6 py-4 text-right">
+                            </td> -->
+                            <!-- <td class="px-6 py-4 text-right">
                                 <form action="{{ route('resepsionis.checkout.process', $transaksi) }}" method="POST" onsubmit="return confirm('Proses Check-out untuk {{ $transaksi->peserta->nama_peserta ?? 'peserta ini' }}?')">
                                     @csrf
                                     <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white font-semibold text-xs transition-colors border border-rose-200" title="Check-out Tamu">
@@ -149,7 +149,7 @@
                                         <span>Check-out</span>
                                     </button>
                                 </form>
-                            </td>
+                            </td> -->
                         </tr>
                     @empty
                         <tr>

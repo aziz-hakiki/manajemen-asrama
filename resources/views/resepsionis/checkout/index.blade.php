@@ -53,7 +53,7 @@
                         <th class="px-6 py-4">Kamar & Gedung</th>
                         <th class="px-6 py-4">Program Diklat</th>
                         <th class="px-6 py-4">Tanggal Masuk</th>
-                        <th class="px-6 py-4 text-right">Aksi</th>
+                        <th class="px-6 py-4 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
