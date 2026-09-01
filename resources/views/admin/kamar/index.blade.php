@@ -52,8 +52,10 @@
             <div>
                 <select name="status" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-xs transition-all">
                     <option value="">Semua Status</option>
-                    <option value="kosong" {{ request('status') == 'kosong' ? 'selected' : '' }}>Kosong</option>
-                    <option value="terisi" {{ request('status') == 'terisi' ? 'selected' : '' }}>Terisi</option>
+                    <option value="kosong" {{ request('status') == 'kosong' ? 'selected' : '' }}>Kosong (0 Terisi)</option>
+                    <option value="1_terisi" {{ request('status') == '1_terisi' ? 'selected' : '' }}>1 Terisi</option>
+                    <option value="2_terisi" {{ request('status') == '2_terisi' ? 'selected' : '' }}>2 Terisi</option>
+                    <option value="3_terisi" {{ request('status') == '3_terisi' ? 'selected' : '' }}>3 Terisi (Penuh)</option>
                 </select>
             </div>
 
@@ -87,6 +89,9 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($kamars as $index => $kamar)
+                        @php
+                            $terisiCount = $kamar->terisi_count;
+                        @endphp
                         <tr class="hover:bg-slate-50/80 transition-colors">
                             <td class="px-6 py-4 font-medium text-slate-400">
                                 {{ $kamars->firstItem() + $index }}
@@ -103,16 +108,43 @@
                                 {{ $kamar->kapasitas }} Orang
                             </td>
                             <td class="px-6 py-4">
-                                @if($kamar->status === 'kosong')
+                                @if($terisiCount === 0)
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                         Kosong
                                     </span>
+                                @elseif($terisiCount === 1)
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            1 Terisi
+                                        </span>
+                                        @if($kamar->activeTransaksi->isNotEmpty())
+                                            <span class="text-[11px] text-slate-400 truncate max-w-[160px]" title="{{ $kamar->activeTransaksi->first()->peserta->nama_peserta ?? '' }}">
+                                                👤 {{ $kamar->activeTransaksi->first()->peserta->nama_peserta ?? '1 Peserta' }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @elseif($terisiCount === 2)
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            2 Terisi
+                                        </span>
+                                        <span class="text-[11px] text-slate-400">
+                                            👥 {{ $kamar->activeTransaksi->pluck('peserta.nama_peserta')->filter()->join(', ') }}
+                                        </span>
+                                    </div>
                                 @else
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/60">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                        Terisi
-                                    </span>
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/60">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                            3 Terisi
+                                        </span>
+                                        <span class="text-[11px] text-rose-600/80 font-medium">
+                                            Penuh (3/3)
+                                        </span>
+                                    </div>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">

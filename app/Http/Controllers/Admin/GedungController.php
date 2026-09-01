@@ -11,9 +11,9 @@ class GedungController extends Controller
     public function index()
     {
         $gedungs = Gedung::withCount(['kamars', 'kamars as kamars_kosong_count' => function ($q) {
-            $q->where('status', 'kosong');
+            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
         }, 'kamars as kamars_terisi_count' => function ($q) {
-            $q->where('status', 'terisi');
+            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
         }])->latest()->paginate(10);
 
         return view('admin.gedung.index', compact('gedungs'));
@@ -59,8 +59,8 @@ class GedungController extends Controller
 
     public function destroy(Gedung $gedung)
     {
-        if ($gedung->kamars()->where('status', 'terisi')->exists()) {
-            return back()->with('error', 'Gedung tidak dapat dihapus karena masih memiliki kamar yang sedang terisi.');
+        if ($gedung->kamars()->whereHas('activeTransaksi')->exists()) {
+            return back()->with('error', 'Gedung tidak dapat dihapus karena masih memiliki kamar yang sedang dihuni peserta.');
         }
 
         $gedung->delete();

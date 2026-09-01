@@ -250,7 +250,7 @@
                     <!-- Pilih Kamar -->
                     <div>
                         <label for="kamar_id" class="block text-sm font-semibold text-slate-700 mb-1.5">
-                            Pilih Kamar Kosong <span class="text-rose-500">*</span>
+                            Pilih Kamar Asrama <span class="text-rose-500">*</span>
                         </label>
                         <select 
                             name="kamar_id" 
@@ -258,19 +258,24 @@
                             required
                             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
                         >
-                            <option value="">-- Pilih Kamar Siap Huni --</option>
+                            <option value="">-- Pilih Kamar Tersedia --</option>
                             @foreach($gedungs as $gedung)
                                 @if($gedung->kamars->isNotEmpty())
                                     <optgroup label="🏢 {{ $gedung->nama_gedung }}">
                                         @foreach($gedung->kamars as $kamar)
+                                            @php
+                                                $terisi = $kamar->terisi_count;
+                                                $statusKet = $terisi === 0 ? 'Kosong' : 'Terisi ' . $terisi . ' orang';
+                                            @endphp
                                             <option value="{{ $kamar->id }}" {{ (old('kamar_id', $selectedKamarId) == $kamar->id) ? 'selected' : '' }}>
-                                                Kamar {{ $kamar->nomor_kamar }} (Kapasitas: {{ $kamar->kapasitas }} Orang)
+                                                {{ $gedung->nama_gedung }} kamar {{ $kamar->nomor_kamar }} (Kapasitas {{ $kamar->kapasitas }} Orang) {{ $statusKet }}
                                             </option>
                                         @endforeach
                                     </optgroup>
                                 @endif
                             @endforeach
                         </select>
+                        <p class="text-[11px] text-slate-400 mt-1.5">Kamar dengan kapasitas 3 orang dapat diisi oleh hingga 3 peserta berbeda.</p>
                     </div>
 
                     <!-- Tanggal & Waktu Masuk -->

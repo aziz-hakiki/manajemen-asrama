@@ -62,10 +62,11 @@
                         id="kapasitas" 
                         value="{{ old('kapasitas', $kamar->kapasitas) }}" 
                         min="1"
-                        max="10"
+                        max="3"
                         required
                         class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
                     >
+                    <p class="text-[11px] text-slate-400 mt-1.5">Maksimal 3 orang per kamar.</p>
                 </div>
 
                 <div>

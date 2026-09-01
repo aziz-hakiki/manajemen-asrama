@@ -133,32 +133,47 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     @forelse($kamarsGedung as $kamar)
                         @php
-                            $activeStay = $kamar->transaksi->first();
+                            $terisiCount = $kamar->transaksi->count();
+                            $isFull = $terisiCount >= $kamar->kapasitas;
+                            $isKosong = $terisiCount === 0;
                         @endphp
-                        <div class="p-4 rounded-xl border {{ $kamar->status === 'terisi' ? 'border-rose-200 bg-rose-50/30' : 'border-emerald-200 bg-emerald-50/30' }} flex flex-col justify-between">
+                        <div class="p-4 rounded-xl border {{ $isKosong ? 'border-emerald-200 bg-emerald-50/30' : ($isFull ? 'border-rose-200 bg-rose-50/30' : 'border-amber-200 bg-amber-50/30') }} flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="font-extrabold text-base text-slate-800 font-mono">
                                         Kamar {{ $kamar->nomor_kamar }}
                                     </span>
-                                    @if($kamar->status === 'terisi')
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">
-                                            Terisi
-                                        </span>
-                                    @else
+                                    @if($isKosong)
                                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
                                             Kosong
                                         </span>
+                                    @elseif(!$isFull)
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                                            {{ $terisiCount }} Terisi
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">
+                                            3 Terisi (Penuh)
+                                        </span>
                                     @endif
                                 </div>
-                                <p class="text-xs text-slate-500 mb-2">Kapasitas: {{ $kamar->kapasitas }} Orang</p>
+                                <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+                                    <span>Kapasitas: {{ $kamar->kapasitas }} Orang</span>
+                                    <span class="font-semibold {{ $isKosong ? 'text-emerald-600' : ($isFull ? 'text-rose-600' : 'text-amber-600') }}">
+                                        {{ $terisiCount }}/{{ $kamar->kapasitas }} Terisi
+                                    </span>
+                                </div>
 
-                                @if($activeStay && $activeStay->peserta)
-                                    <div class="mt-2 pt-2 border-t border-rose-200/60 text-xs">
-                                        <p class="text-[10px] font-bold text-rose-800 uppercase tracking-wider">Penghuni:</p>
-                                        <p class="font-bold text-slate-800">{{ $activeStay->peserta->nama_peserta }}</p>
-                                        <p class="text-[11px] text-slate-500 truncate">{{ $activeStay->peserta->diklat->nama_diklat ?? '-' }}</p>
-                                        <p class="text-[10px] text-slate-400 mt-1">Masuk: {{ \Carbon\Carbon::parse($activeStay->tanggal_masuk)->translatedFormat('d M Y, H:i') }}</p>
+                                @if($kamar->transaksi->isNotEmpty())
+                                    <div class="mt-2 pt-2 border-t border-slate-200 text-xs space-y-2">
+                                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Penghuni ({{ $terisiCount }}):</p>
+                                        @foreach($kamar->transaksi as $tr)
+                                            <div class="p-1.5 rounded-lg bg-white/80 border border-slate-200/60">
+                                                <p class="font-bold text-slate-800 text-[11px]">{{ $tr->peserta->nama_peserta ?? '-' }}</p>
+                                                <p class="text-[10px] text-slate-500 truncate">{{ $tr->peserta->diklat->nama_diklat ?? '-' }}</p>
+                                                <p class="text-[9px] text-slate-400">Masuk: {{ \Carbon\Carbon::parse($tr->tanggal_masuk)->translatedFormat('d M Y, H:i') }}</p>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @endif
                             </div>

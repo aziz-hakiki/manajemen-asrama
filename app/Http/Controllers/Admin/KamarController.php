@@ -14,14 +14,26 @@ class KamarController extends Controller
     {
         $gedungs = Gedung::all();
 
-        $query = Kamar::with('gedung');
+        $query = Kamar::with(['gedung', 'activeTransaksi.peserta.diklat'])
+            ->withCount(['activeTransaksi as terisi_count']);
 
         if ($request->filled('gedung_id')) {
             $query->where('gedung_id', $request->gedung_id);
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $status = $request->status;
+            if ($status === 'kosong') {
+                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
+            } elseif ($status === '1_terisi') {
+                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 1');
+            } elseif ($status === '2_terisi') {
+                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 2');
+            } elseif ($status === '3_terisi' || $status === 'penuh') {
+                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") >= 3');
+            } elseif ($status === 'terisi') {
+                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
+            }
         }
 
         if ($request->filled('search')) {
@@ -49,12 +61,14 @@ class KamarController extends Controller
                 'max:50',
                 Rule::unique('kamars')->where(fn ($query) => $query->where('gedung_id', $request->gedung_id))
             ],
-            'kapasitas' => 'required|integer|min:1|max:10',
+            'kapasitas' => 'required|integer|min:1|max:3',
         ], [
             'gedung_id.required' => 'Pilih gedung terlebih dahulu.',
             'nomor_kamar.required' => 'Nomor kamar wajib diisi.',
             'nomor_kamar.unique' => 'Nomor kamar sudah ada di gedung yang dipilih.',
             'kapasitas.required' => 'Kapasitas kamar wajib diisi.',
+            'kapasitas.min' => 'Kapasitas minimal 1 orang.',
+            'kapasitas.max' => 'Kapasitas maksimal 3 orang per kamar.',
         ]);
 
         Kamar::create([
@@ -85,12 +99,15 @@ class KamarController extends Controller
                     ->where(fn ($query) => $query->where('gedung_id', $request->gedung_id))
                     ->ignore($kamar->id)
             ],
-            'kapasitas' => 'required|integer|min:1|max:10',
-            'status' => 'required|in:kosong,terisi',
+            'kapasitas' => 'required|integer|min:1|max:3',
+            'status' => 'nullable|in:kosong,terisi',
         ], [
             'gedung_id.required' => 'Pilih gedung terlebih dahulu.',
             'nomor_kamar.required' => 'Nomor kamar wajib diisi.',
             'nomor_kamar.unique' => 'Nomor kamar sudah terdaftar di gedung ini.',
+            'kapasitas.required' => 'Kapasitas kamar wajib diisi.',
+            'kapasitas.min' => 'Kapasitas minimal 1 orang.',
+            'kapasitas.max' => 'Kapasitas maksimal 3 orang per kamar.',
         ]);
 
         $kamar->update($validated);
@@ -100,8 +117,8 @@ class KamarController extends Controller
 
     public function destroy(Kamar $kamar)
     {
-        if ($kamar->status === 'terisi') {
-            return back()->with('error', 'Kamar tidak dapat dihapus karena saat ini berstatus terisi.');
+        if ($kamar->activeTransaksi()->exists()) {
+            return back()->with('error', 'Kamar tidak dapat dihapus karena saat ini sedang dihuni peserta.');
         }
 
         $kamar->delete();

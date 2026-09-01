@@ -47,17 +47,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', function () {
         $totalGedung = Gedung::count();
         $totalKamar = Kamar::count();
-        $kamarKosong = Kamar::where('status', 'kosong')->count();
-        $kamarTerisi = Kamar::where('status', 'terisi')->count();
+        $kamarKosong = Kamar::whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
+        $kamarTerisi = Kamar::whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0')->count();
         $totalDiklat = Diklat::count();
         $totalPeserta = Peserta::count();
         $penghuniAktif = TransaksiAsrama::where('status', 'menginap')->count();
         $totalUser = User::count();
 
         $gedungList = Gedung::withCount(['kamars', 'kamars as kamars_kosong_count' => function ($q) {
-            $q->where('status', 'kosong');
+            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
         }, 'kamars as kamars_terisi_count' => function ($q) {
-            $q->where('status', 'terisi');
+            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
         }])->get();
 
         return view('admin.dashboard', compact(
@@ -97,13 +97,13 @@ Route::middleware(['auth', 'role:resepsionis'])->prefix('resepsionis')->name('re
     Route::get('/dashboard', function () {
         $checkinHariIni = TransaksiAsrama::whereDate('tanggal_masuk', today())->count();
         $checkoutHariIni = TransaksiAsrama::whereDate('tanggal_keluar', today())->count();
-        $totalKosong = Kamar::where('status', 'kosong')->count();
+        $totalKosong = Kamar::whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
         $penghuniAktif = TransaksiAsrama::where('status', 'menginap')->count();
         
         $gedungs = Gedung::withCount(['kamars', 'kamars as kamars_kosong_count' => function ($q) {
-            $q->where('status', 'kosong');
+            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
         }, 'kamars as kamars_terisi_count' => function ($q) {
-            $q->where('status', 'terisi');
+            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
         }])->get();
 
         $transaksiTerbaru = TransaksiAsrama::with(['peserta.diklat', 'kamar.gedung'])

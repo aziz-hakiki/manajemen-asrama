@@ -37,22 +37,34 @@ class CheckOutController extends Controller
         }
 
         $namaPeserta = $transaksi->peserta->nama_peserta ?? 'Peserta';
-        $nomorKamar = $transaksi->kamar->nomor_kamar ?? '';
+        $kamar = $transaksi->kamar;
+        $remainingOccupants = 0;
 
-        DB::transaction(function () use ($transaksi) {
+        DB::transaction(function () use ($transaksi, $kamar, &$remainingOccupants) {
             // Update transaksi menginap menjadi selesai
             $transaksi->update([
                 'tanggal_keluar' => now(),
                 'status' => 'selesai',
             ]);
 
-            // Kembalikan status kamar menjadi kosong
-            if ($transaksi->kamar) {
-                $transaksi->kamar->update(['status' => 'kosong']);
+            // Perbarui status kamar berdasarkan sisa penghuni aktif
+            if ($kamar) {
+                $remainingOccupants = $kamar->transaksi()
+                    ->where('status', 'menginap')
+                    ->where('id', '!=', $transaksi->id)
+                    ->count();
+
+                $kamar->update([
+                    'status' => ($remainingOccupants > 0) ? 'terisi' : 'kosong'
+                ]);
             }
         });
 
+        $infoSisa = $remainingOccupants > 0 
+            ? "Kamar {$nomorKamar} masih terisi {$remainingOccupants} orang." 
+            : "Kamar {$nomorKamar} kini kosong kembali.";
+
         return redirect()->route('resepsionis.checkout.index')
-            ->with('success', "Check-out untuk {$namaPeserta} dari kamar {$nomorKamar} berhasil diproses. Kamar kini telah kosong kembali.");
+            ->with('success', "Check-out untuk {$namaPeserta} dari kamar {$nomorKamar} berhasil diproses. {$infoSisa}");
     }
 }
