@@ -67,21 +67,21 @@
                         <svg class="w-5 h-5 text-slate-500 {{ request()->routeIs('admin.diklat.*') ? 'text-indigo-600' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
-                        <span>Diklat</span>
+                        <span>Kegiatan</span>
                     </x-sidebar-link>
 
                     <x-sidebar-link :href="route('admin.peserta.index')" :active="request()->routeIs('admin.peserta.*')">
                         <svg class="w-5 h-5 text-slate-500 {{ request()->routeIs('admin.peserta.*') ? 'text-indigo-600' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
-                        <span>Peserta</span>
+                        <span>Tamu</span>
                     </x-sidebar-link>
 
                     <x-sidebar-link :href="route('admin.peserta.import')" :active="request()->routeIs('admin.peserta.import')">
                         <svg class="w-5 h-5 text-slate-500 {{ request()->routeIs('admin.peserta.import') ? 'text-indigo-600' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        <span>Import Excel</span>
+                        <span>Import</span>
                     </x-sidebar-link>
 
                     <x-sidebar-link :href="route('admin.user.index')" :active="request()->routeIs('admin.user.*')">

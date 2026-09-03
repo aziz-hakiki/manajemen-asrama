@@ -54,6 +54,37 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
+                        <label for="jenis_kelamin" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Jenis Kelamin
+                        </label>
+                        <select 
+                            name="jenis_kelamin" 
+                            id="jenis_kelamin" 
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
+                        >
+                            <option value="">-- Pilih Jenis Kelamin --</option>
+                            <option value="Laki-laki" {{ old('jenis_kelamin', $peserta->jenis_kelamin) == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                            <option value="Perempuan" {{ old('jenis_kelamin', $peserta->jenis_kelamin) == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="keterangan" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Keterangan (Sebagai)
+                        </label>
+                        <select 
+                            name="keterangan" 
+                            id="keterangan" 
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
+                        >
+                            <option value="Peserta" {{ old('keterangan', $peserta->keterangan ?? 'Peserta') == 'Peserta' ? 'selected' : '' }}>Peserta</option>
+                            <option value="Narasumber" {{ old('keterangan', $peserta->keterangan) == 'Narasumber' ? 'selected' : '' }}>Narasumber</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
                         <label for="nip_nik" class="block text-sm font-semibold text-slate-700 mb-1.5">
                             NIP / NIK
                         </label>

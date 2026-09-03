@@ -78,9 +78,11 @@
                     <tr>
                         <th class="px-6 py-4">No</th>
                         <th class="px-6 py-4">Nama Peserta</th>
+                        <th class="px-6 py-4">Jenis Kelamin</th>
                         <th class="px-6 py-4">NIP / NIK</th>
                         <th class="px-6 py-4">Instansi</th>
                         <th class="px-6 py-4">Program Diklat</th>
+                        <th class="px-6 py-4">Keterangan</th>
                         <th class="px-6 py-4">Status Menginap</th>
                         <th class="px-6 py-4 text-right">Aksi</th>
                     </tr>
@@ -97,6 +99,19 @@
                             <td class="px-6 py-4 font-bold text-slate-800">
                                 {{ $peserta->nama_peserta }}
                             </td>
+                            <td class="px-6 py-4 text-xs">
+                                @if($peserta->jenis_kelamin === 'Laki-laki')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200/60">
+                                        Laki-laki
+                                    </span>
+                                @elseif($peserta->jenis_kelamin === 'Perempuan')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-pink-50 text-pink-700 border border-pink-200/60">
+                                        Perempuan
+                                    </span>
+                                @else
+                                    <span class="text-slate-400">-</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-xs font-mono text-slate-600">
                                 {{ $peserta->nip_nik ?? '-' }}
                             </td>
@@ -105,6 +120,17 @@
                             </td>
                             <td class="px-6 py-4 text-xs font-medium text-slate-700">
                                 {{ $peserta->diklat->nama_diklat ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4 text-xs">
+                                @if($peserta->keterangan === 'Narasumber')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
+                                        Narasumber
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                                        {{ $peserta->keterangan ?? 'Peserta' }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-6 py-4">
                                 @if($activeTransaksi && $activeTransaksi->kamar)
@@ -139,7 +165,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="9" class="px-6 py-12 text-center text-slate-400">
                                 Tidak ada data peserta yang ditemukan.
                             </td>
                         </tr>

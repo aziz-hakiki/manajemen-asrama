@@ -25,7 +25,8 @@ class PesertaController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('nama_peserta', 'like', "%{$search}%")
                   ->orWhere('nip_nik', 'like', "%{$search}%")
-                  ->orWhere('instansi', 'like', "%{$search}%");
+                  ->orWhere('instansi', 'like', "%{$search}%")
+                  ->orWhere('keterangan', 'like', "%{$search}%");
             });
         }
 
@@ -45,10 +46,12 @@ class PesertaController extends Controller
         $validated = $request->validate([
             'diklat_id' => 'required|exists:diklats,id',
             'nama_peserta' => 'required|string|max:255',
+            'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
             'nip_nik' => 'nullable|string|max:50',
             'instansi' => 'nullable|string|max:255',
+            'keterangan' => 'nullable|string|max:50',
         ], [
-            'diklat_id.required' => 'Pilih kegiatan diklat terlebih dahulu.',
+            'diklat_id.required' => 'Pilih kegiatan terlebih dahulu.',
             'nama_peserta.required' => 'Nama peserta wajib diisi.',
         ]);
 
@@ -68,10 +71,12 @@ class PesertaController extends Controller
         $validated = $request->validate([
             'diklat_id' => 'required|exists:diklats,id',
             'nama_peserta' => 'required|string|max:255',
+            'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
             'nip_nik' => 'nullable|string|max:50',
             'instansi' => 'nullable|string|max:255',
+            'keterangan' => 'nullable|string|max:50',
         ], [
-            'diklat_id.required' => 'Pilih kegiatan diklat terlebih dahulu.',
+            'diklat_id.required' => 'Pilih kegiatan terlebih dahulu.',
             'nama_peserta.required' => 'Nama peserta wajib diisi.',
         ]);
 
