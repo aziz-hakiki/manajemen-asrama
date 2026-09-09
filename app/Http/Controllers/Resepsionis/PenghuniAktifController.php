@@ -36,7 +36,9 @@ class PenghuniAktifController extends Controller
                 $sub->whereHas('peserta', function ($q) use ($search) {
                     $q->where('nama_peserta', 'like', "%{$search}%")
                       ->orWhere('nip_nik', 'like', "%{$search}%")
-                      ->orWhere('instansi', 'like', "%{$search}%");
+                      ->orWhere('instansi', 'like', "%{$search}%")
+                      ->orWhere('keterangan', 'like', "%{$search}%")
+                      ->orWhere('jenis_kelamin', 'like', "%{$search}%");
                 })->orWhereHas('kamar', function ($q) use ($search) {
                     $q->where('nomor_kamar', 'like', "%{$search}%");
                 });

@@ -86,42 +86,63 @@
             <table class="w-full text-left text-sm text-slate-600">
                 <thead class="bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-4">No</th>
-                        <th class="px-6 py-4">Nama Peserta</th>
-                        <th class="px-6 py-4">Instansi</th>
-                        <th class="px-6 py-4">Program Diklat</th>
-                        <th class="px-6 py-4">Alokasi Kamar</th>
-                        <th class="px-6 py-4">Waktu Check-in</th>
-                        <!-- <th class="px-6 py-4">Lama Menginap</th> -->
-                        <!-- <th class="px-6 py-4 text-center">Aksi</th> -->
+                        <th class="px-5 py-4">No</th>
+                        <th class="px-5 py-4">Nama Peserta</th>
+                        <th class="px-5 py-4">Jenis Kelamin</th>
+                        <th class="px-5 py-4">NIP/NIK</th>
+                        <th class="px-5 py-4">Instansi</th>
+                        <th class="px-5 py-4">Program Diklat</th>
+                        <th class="px-5 py-4">Keterangan</th>
+                        <th class="px-5 py-4">Alokasi Kamar</th>
+                        <th class="px-5 py-4">Waktu Check-in</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($penghunis as $index => $transaksi)
                         @php
                             $tglMasuk = \Carbon\Carbon::parse($transaksi->tanggal_masuk)->locale('id');
-                            $durasi = $tglMasuk->diffForHumans(now(), [
-                                'parts' => 2,
-                                'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE
-                            ]);
                         @endphp
                         <tr class="hover:bg-slate-50/80 transition-colors">
-                            <td class="px-6 py-4 font-medium text-slate-400">
+                            <td class="px-5 py-4 font-medium text-slate-400">
                                 {{ $penghunis->firstItem() + $index }}
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col">
-                                    <span class="font-bold text-slate-800">{{ $transaksi->peserta->nama_peserta ?? '-' }}</span>
-                                    <span class="text-xs font-mono text-slate-400">{{ $transaksi->peserta->nip_nik ?? '-' }}</span>
-                                </div>
+                            <td class="px-5 py-4 font-bold text-slate-800">
+                                {{ $transaksi->peserta->nama_peserta ?? '-' }}
                             </td>
-                            <td class="px-6 py-4 text-xs text-slate-600">
+                            <td class="px-5 py-4 text-xs whitespace-nowrap">
+                                @if(($transaksi->peserta->jenis_kelamin ?? '') === 'Laki-laki')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md font-medium bg-blue-50 text-blue-700 border border-blue-200/60">
+                                        Laki-laki
+                                    </span>
+                                @elseif(($transaksi->peserta->jenis_kelamin ?? '') === 'Perempuan')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md font-medium bg-pink-50 text-pink-700 border border-pink-200/60">
+                                        Perempuan
+                                    </span>
+                                @else
+                                    <span class="text-slate-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-5 py-4 text-xs font-mono text-slate-600 whitespace-nowrap">
+                                {{ $transaksi->peserta->nip_nik ?? '-' }}
+                            </td>
+                            <td class="px-5 py-4 text-xs text-slate-600">
                                 {{ $transaksi->peserta->instansi ?? '-' }}
                             </td>
-                            <td class="px-6 py-4 text-xs font-medium text-slate-700">
+                            <td class="px-5 py-4 text-xs font-medium text-slate-700">
                                 {{ $transaksi->peserta->diklat->nama_diklat ?? '-' }}
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-5 py-4 text-xs whitespace-nowrap">
+                                @if(($transaksi->peserta->keterangan ?? '') === 'Narasumber')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
+                                        Narasumber
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                                        {{ $transaksi->peserta->keterangan ?: 'Peserta' }}
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-5 py-4 whitespace-nowrap">
                                 @if($transaksi->kamar)
                                     <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-xs border border-emerald-200/60">
                                         <span>Kamar {{ $transaksi->kamar->nomor_kamar }}</span>
@@ -131,29 +152,13 @@
                                     <span class="text-slate-400">-</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-xs text-slate-600">
+                            <td class="px-5 py-4 text-xs text-slate-600 whitespace-nowrap">
                                 {{ $tglMasuk->translatedFormat('d M Y, H:i') }}
                             </td>
-                            <!-- <td class="px-6 py-4">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
-                                    {{ $durasi }}
-                                </span>
-                            </td> -->
-                            <!-- <td class="px-6 py-4 text-right">
-                                <form action="{{ route('resepsionis.checkout.process', $transaksi) }}" method="POST" onsubmit="return confirm('Proses Check-out untuk {{ $transaksi->peserta->nama_peserta ?? 'peserta ini' }}?')">
-                                    @csrf
-                                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white font-semibold text-xs transition-colors border border-rose-200" title="Check-out Tamu">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                        </svg>
-                                        <span>Check-out</span>
-                                    </button>
-                                </form>
-                            </td> -->
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="9" class="px-6 py-12 text-center text-slate-400">
                                 Belum ada peserta yang aktif menginap saat ini.
                             </td>
                         </tr>

@@ -20,11 +20,17 @@ class PesertaController extends Controller
         $validated = $request->validate([
             'diklat_id' => 'required|exists:diklats,id',
             'nama_peserta' => 'required|string|max:255',
-            'nip_nik' => 'nullable|string|max:50',
+            'jenis_kelamin' => 'nullable|in:Laki-laki,Perempuan',
+            'nip_nik' => 'bail|required|numeric|digits_between:1,30|unique:pesertas,nip_nik',
             'instansi' => 'nullable|string|max:255',
+            'keterangan' => 'nullable|string|max:50',
         ], [
             'diklat_id.required' => 'Pilih kegiatan diklat terlebih dahulu.',
             'nama_peserta.required' => 'Nama peserta wajib diisi.',
+            'nip_nik.required' => 'NIP / NIK wajib diisi.',
+            'nip_nik.numeric' => 'NIP / NIK wajib berupa angka.',
+            'nip_nik.digits_between' => 'NIP / NIK harus berupa angka (1-30 digit).',
+            'nip_nik.unique' => 'NIP / NIK sudah terdaftar pada peserta lain. Silakan periksa kembali.',
         ]);
 
         $peserta = Peserta::create($validated);

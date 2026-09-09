@@ -36,7 +36,9 @@
                                 'nip' => $p->nip_nik ?? '',
                                 'instansi' => $p->instansi ?? 'Umum',
                                 'diklat' => $p->diklat->nama_diklat ?? 'Program Diklat',
-                                'searchText' => strtolower($p->nama_peserta . ' ' . ($p->nip_nik ?? '') . ' ' . ($p->instansi ?? '') . ' ' . ($p->diklat->nama_diklat ?? '')),
+                                'jenis_kelamin' => $p->jenis_kelamin ?? '',
+                                'keterangan' => $p->keterangan ?? 'Peserta',
+                                'searchText' => strtolower($p->nama_peserta . ' ' . ($p->nip_nik ?? '') . ' ' . ($p->instansi ?? '') . ' ' . ($p->diklat->nama_diklat ?? '') . ' ' . ($p->keterangan ?? '') . ' ' . ($p->jenis_kelamin ?? '')),
                             ];
                         })->values();
                         $initialPesertaId = (string) old('peserta_id', $selectedPesertaId ?? '');
@@ -157,6 +159,17 @@
                                                     class="text-[11px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono"
                                                     x-text="item.nip"
                                                 ></span>
+                                                <span 
+                                                    :class="item.keterangan === 'Narasumber' ? 'bg-amber-50 text-amber-700 border-amber-200/80' : 'bg-indigo-50 text-indigo-700 border-indigo-200/80'"
+                                                    class="text-[10px] px-2 py-0.5 rounded-full font-medium border"
+                                                    x-text="item.keterangan || 'Peserta'"
+                                                ></span>
+                                                <span 
+                                                    x-show="item.jenis_kelamin" 
+                                                    :class="item.jenis_kelamin === 'Laki-laki' ? 'bg-blue-50 text-blue-700 border-blue-200/60' : (item.jenis_kelamin === 'Perempuan' ? 'bg-pink-50 text-pink-700 border-pink-200/60' : 'bg-slate-100 text-slate-600 border-slate-200/60')"
+                                                    class="text-[10px] px-1.5 py-0.5 rounded font-medium border"
+                                                    x-text="item.jenis_kelamin"
+                                                ></span>
                                             </div>
                                             <div class="flex flex-wrap items-center gap-1.5 mt-1 text-xs text-slate-500">
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px]">
@@ -219,6 +232,12 @@
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs font-bold text-emerald-950" x-text="selectedItem.nama"></span>
                                             <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded">Terpilih</span>
+                                            <span 
+                                                :class="selectedItem.keterangan === 'Narasumber' ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'"
+                                                class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                                                x-text="selectedItem.keterangan || 'Peserta'"
+                                            ></span>
+                                            <span x-show="selectedItem.jenis_kelamin" class="text-[10px] font-medium text-slate-600 bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60" x-text="selectedItem.jenis_kelamin"></span>
                                         </div>
                                         <p class="text-[11px] text-emerald-800">
                                             <span x-text="selectedItem.instansi"></span> &bull; <span x-text="selectedItem.diklat"></span>

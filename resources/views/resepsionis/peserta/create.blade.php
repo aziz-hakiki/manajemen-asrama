@@ -64,17 +64,67 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
+                        <label for="jenis_kelamin" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Jenis Kelamin
+                        </label>
+                        <select 
+                            name="jenis_kelamin" 
+                            id="jenis_kelamin" 
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
+                        >
+                            <option value="">-- Pilih Jenis Kelamin --</option>
+                            <option value="Laki-laki" {{ old('jenis_kelamin') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                            <option value="Perempuan" {{ old('jenis_kelamin') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                        </select>
+                        @error('jenis_kelamin')
+                            <p class="text-xs text-rose-500 mt-1.5 font-medium">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="keterangan" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Keterangan (Sebagai)
+                        </label>
+                        <select 
+                            name="keterangan" 
+                            id="keterangan" 
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
+                        >
+                            <option value="Peserta" {{ old('keterangan', 'Peserta') == 'Peserta' ? 'selected' : '' }}>Peserta</option>
+                            <option value="Narasumber" {{ old('keterangan') == 'Narasumber' ? 'selected' : '' }}>Narasumber</option>
+                        </select>
+                        @error('keterangan')
+                            <p class="text-xs text-rose-500 mt-1.5 font-medium">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
                         <label for="nip_nik" class="block text-sm font-semibold text-slate-700 mb-1.5">
-                            NIP / NIK
+                            NIP / NIK <span class="text-rose-500">*</span>
                         </label>
                         <input 
                             type="text" 
+                            inputmode="numeric"
+                            pattern="[0-9]*"
                             name="nip_nik" 
                             id="nip_nik" 
                             value="{{ old('nip_nik') }}" 
-                            placeholder="199001012015011002"
-                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
+                            placeholder="Contoh: 199001012015011002"
+                            required
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                            class="w-full px-4 py-2.5 rounded-xl border @error('nip_nik') border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:ring-rose-200 @else border-slate-200 focus:border-indigo-500 focus:ring-indigo-200 @enderror text-sm transition-all"
                         >
+                        <p class="text-xs text-slate-400 mt-1">Wajib angka tanpa spasi atau karakter lain.</p>
+                        @error('nip_nik')
+                            <p class="text-xs text-rose-600 mt-1.5 font-medium flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 inline shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                                {{ $message }}
+                            </p>
+                        @enderror
                     </div>
 
                     <div>
