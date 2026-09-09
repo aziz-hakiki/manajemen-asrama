@@ -230,11 +230,12 @@ Untuk mempercepat input data peserta dalam jumlah banyak (puluhan hingga ratusan
 1. Klik menu **Import Excel** pada sidebar admin.
 2. Unduh template resmi dengan mengklik tautan **Unduh Contoh Format Excel**.
 3. Buka file template di Microsoft Excel dan isi data peserta sesuai kolom:
-   - Kolom A: `nama_peserta` *(Wajib diisi)*
-   - Kolom B: `nip_nik` *(Opsional)*
-   - Kolom C: `instansi` *(Opsional)*
-   - Kolom D: `nama_diklat` *(Wajib sesuai atau sistem otomatis mencocokkan nama diklat)*
-4. Simpan file dalam format `.xlsx` atau `.csv`.
+   - Kolom A: `Nama Peserta` *(Wajib diisi)*
+   - Kolom B: `Jenis Kelamin` *(Laki-laki / Perempuan atau L / P)*
+   - Kolom C: `NIP / NIK` *(Hanya angka)*
+   - Kolom D: `Instansi` *(Asal kantor/instansi)*
+   - Kolom E: `Keterangan` *(Peserta / Narasumber)*
+4. Simpan file dalam format `.csv`.
 5. Kembali ke aplikasi, pilih program diklat tujuan (jika diperlukan) dan klik **Pilih File Excel**.
 6. Klik tombol **Unggah & Proses Import Data**.
 7. Sistem akan menampilkan notifikasi sukses beserta jumlah total data peserta yang berhasil dimasukkan ke sistem.

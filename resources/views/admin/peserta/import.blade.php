@@ -26,16 +26,19 @@
             </div>
 
             <!-- Petunjuk Format File -->
-            <div class="p-4 mb-6 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
-                <div class="font-bold text-slate-800 flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Format Kolom File CSV (.csv):</span>
+            <div class="p-5 mb-6 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-3.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between ">
+                    <div class="font-bold text-slate-800 flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <span class="text-sm">Panduan Format Kolom Excel / CSV:</span>
+                    </div>
+                    <a href="{{ route('admin.peserta.template') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition-colors shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Unduh Contoh Template CSV
+                    </a>
                 </div>
-                <p>Pastikan file CSV memiliki struktur kolom berurutan sebagai berikut:</p>
-                <div class="p-2.5 rounded-lg bg-white border border-slate-200 font-mono text-[11px] text-slate-700">
-                    Nama Peserta, NIP/NIK, Instansi
-                </div>
-                <p class="text-[11px] text-slate-400">Baris pertama (header) akan otomatis dilewati oleh sistem saat pemrosesan.</p>
             </div>
 
             <form action="{{ route('admin.peserta.import.process') }}" method="POST" enctype="multipart/form-data" class="space-y-5">

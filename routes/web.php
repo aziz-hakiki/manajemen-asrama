@@ -78,7 +78,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('kamar', KamarController::class);
     Route::resource('diklat', DiklatController::class);
     
-    // Import Peserta Routes
+    // Import & Check Peserta Routes
+    Route::get('peserta/check-nip', [PesertaController::class, 'checkNip'])->name('peserta.check-nip');
+    Route::get('peserta/template', [PesertaController::class, 'downloadTemplate'])->name('peserta.template');
     Route::get('peserta/import', [PesertaController::class, 'importForm'])->name('peserta.import');
     Route::post('peserta/import', [PesertaController::class, 'import'])->name('peserta.import.process');
     Route::resource('peserta', PesertaController::class)->parameters(['peserta' => 'peserta']);
