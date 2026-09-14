@@ -17,12 +17,12 @@
         <div class="flex flex-wrap items-center gap-2">
             <!-- Kosong -->
             <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-xs border border-emerald-200">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>Kosong: {{ $totalKosong }}</span>
             </div>
             <!-- Terisi 1-2 Orang -->
             <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 font-semibold text-xs border border-amber-200">
-                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span class="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
                 <span>Terisi 1-2: {{ $totalSebagian }}</span>
             </div>
             <!-- Penuh -->
@@ -31,8 +31,8 @@
                 <span>Penuh (3/3): {{ $totalPenuh }}</span>
             </div>
             <!-- Rusak -->
-            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800 text-slate-200 font-semibold text-xs border border-slate-700">
-                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 font-semibold text-xs border border-slate-200">
+                <span class="w-2 h-2 rounded-full bg-gray-500 animate-pulse"></span>
                 <span>Rusak: {{ $totalRusak ?? 0 }}</span>
             </div>
             <!-- Total -->
@@ -114,22 +114,21 @@
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">
                             {{ $kamar->gedung->nama_gedung ?? 'Gedung' }}
                         </span>
-                        
                         @if($isRusak)
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold text-xs border border-slate-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-gray-500 animate-pulse"></span>
                                 Rusak
                             </span>
                         @elseif($isKosong)
                             <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
                                   style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                 Kosong
                             </span>
                         @elseif(!$isFull)
                             <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
                                   style="background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;">
-                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
                                 {{ $terisi }} Terisi
                             </span>
                         @else
