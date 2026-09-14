@@ -130,6 +130,7 @@ Route::middleware(['auth', 'role:resepsionis'])->prefix('resepsionis')->name('re
     // Check-out
     Route::get('checkout', [CheckOutController::class, 'index'])->name('checkout.index');
     Route::post('checkout/{transaksi}', [CheckOutController::class, 'process'])->name('checkout.process');
+    Route::match(['post', 'put'], 'checkout/{transaksi}/pindah-kamar', [CheckOutController::class, 'pindahKamar'])->name('checkout.pindah-kamar');
 
     // Kamar Kosong
     Route::get('kamar-kosong', [KamarKosongController::class, 'index'])->name('kamar-kosong.index');

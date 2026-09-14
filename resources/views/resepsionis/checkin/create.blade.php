@@ -113,7 +113,7 @@
                                 </button>
                             </div>
                         </div>
-
+                        
                         <!-- Dropdown Menu / Results List -->
                         <div 
                             x-show="isOpen" 
