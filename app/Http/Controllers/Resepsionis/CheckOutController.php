@@ -76,6 +76,23 @@ class CheckOutController extends Controller
             ->with('success', "Check-out untuk {$namaPeserta} dari kamar {$nomorKamar} berhasil diproses. {$infoSisa}");
     }
 
+    public function editPindahKamar(TransaksiAsrama $transaksi)
+    {
+        if ($transaksi->status !== 'menginap') {
+            return redirect()->route('resepsionis.checkout.index')
+                ->with('error', 'Transaksi peserta ini sudah selesai atau tidak aktif.');
+        }
+
+        $transaksi->load(['peserta.diklat', 'kamar.gedung']);
+
+        $gedungs = Gedung::with(['kamars' => function ($q) {
+            $q->withCount(['activeTransaksi as terisi_count'])
+              ->orderBy('nomor_kamar');
+        }])->orderBy('nama_gedung')->get();
+
+        return view('resepsionis.checkout.pindah-kamar', compact('transaksi', 'gedungs'));
+    }
+
     public function pindahKamar(Request $request, TransaksiAsrama $transaksi)
     {
         if ($transaksi->status !== 'menginap') {
@@ -84,76 +101,51 @@ class CheckOutController extends Controller
 
         $validated = $request->validate([
             'kamar_id' => 'required|exists:kamars,id',
-            'nama_peserta' => 'required|string|max:255',
-            'nip_nik' => 'bail|required|numeric|digits_between:1,30|unique:pesertas,nip_nik,' . ($transaksi->peserta_id ?? 0),
-            'instansi' => 'nullable|string|max:255',
-            'catatan' => 'nullable|string|max:255',
         ], [
             'kamar_id.required' => 'Pilih kamar tujuan perpindahan.',
             'kamar_id.exists' => 'Kamar yang dipilih tidak valid.',
-            'nama_peserta.required' => 'Nama peserta wajib diisi.',
-            'nip_nik.required' => 'NIP / NIK wajib diisi.',
-            'nip_nik.numeric' => 'NIP / NIK wajib berupa angka.',
-            'nip_nik.digits_between' => 'NIP / NIK harus berupa angka (1-30 digit).',
-            'nip_nik.unique' => 'NIP / NIK sudah digunakan oleh peserta lain.',
         ]);
 
-        $kamarLama = $transaksi->kamar;
-        $isKamarChanged = ((int)$transaksi->kamar_id !== (int)$validated['kamar_id']);
-        $kamarBaru = null;
-
-        if ($isKamarChanged) {
-            $kamarBaru = Kamar::with('gedung')->findOrFail($validated['kamar_id']);
-            $activeInNew = $kamarBaru->activeTransaksi()->count();
-
-            if ($activeInNew >= $kamarBaru->kapasitas) {
-                return back()->with('error', "Kamar {$kamarBaru->nomor_kamar} sudah penuh (kapasitas {$kamarBaru->kapasitas} orang). Silakan pilih kamar lain.");
-            }
+        if ((int)$transaksi->kamar_id === (int)$validated['kamar_id']) {
+            return back()->with('error', 'Kamar tujuan sama dengan kamar yang sedang ditempati saat ini.');
         }
 
-        DB::transaction(function () use ($transaksi, $validated, $isKamarChanged, $kamarLama, $kamarBaru) {
-            // Update data peserta jika ada perubahan
-            if ($transaksi->peserta) {
-                $transaksi->peserta->update([
-                    'nama_peserta' => $validated['nama_peserta'],
-                    'nip_nik' => $validated['nip_nik'],
-                    'instansi' => $validated['instansi'] ?? null,
+        $kamarLama = $transaksi->kamar;
+        $kamarBaru = Kamar::with('gedung')->findOrFail($validated['kamar_id']);
+        $activeInNew = $kamarBaru->activeTransaksi()->count();
+
+        if ($activeInNew >= $kamarBaru->kapasitas) {
+            return back()->with('error', "Kamar {$kamarBaru->nomor_kamar} sudah penuh (kapasitas {$kamarBaru->kapasitas} orang). Silakan pilih kamar lain.");
+        }
+
+        DB::transaction(function () use ($transaksi, $kamarLama, $kamarBaru) {
+            // Update kamar pada transaksi peserta
+            $transaksi->update([
+                'kamar_id' => $kamarBaru->id,
+            ]);
+
+            // Update kamar baru menjadi terisi
+            $kamarBaru->update(['status' => 'terisi']);
+
+            // Perbarui status kamar lama berdasarkan sisa penghuni
+            if ($kamarLama) {
+                $remainingInOld = $kamarLama->transaksi()
+                    ->where('status', 'menginap')
+                    ->where('id', '!=', $transaksi->id)
+                    ->count();
+
+                $kamarLama->update([
+                    'status' => ($remainingInOld > 0) ? 'terisi' : 'kosong',
                 ]);
-            }
-
-            // Jika ada perpindahan kamar
-            if ($isKamarChanged && $kamarBaru) {
-                $transaksi->update([
-                    'kamar_id' => $kamarBaru->id,
-                ]);
-
-                // Update kamar baru menjadi terisi
-                $kamarBaru->update(['status' => 'terisi']);
-
-                // Perbarui status kamar lama berdasarkan sisa penghuni
-                if ($kamarLama) {
-                    $remainingInOld = $kamarLama->transaksi()
-                        ->where('status', 'menginap')
-                        ->where('id', '!=', $transaksi->id)
-                        ->count();
-
-                    $kamarLama->update([
-                        'status' => ($remainingInOld > 0) ? 'terisi' : 'kosong',
-                    ]);
-                }
             }
         });
 
-        $namaPeserta = $validated['nama_peserta'];
-        if ($isKamarChanged && $kamarBaru) {
-            $nomorLama = $kamarLama ? $kamarLama->nomor_kamar : '-';
-            $nomorBaru = $kamarBaru->nomor_kamar;
-            $namaGedungBaru = $kamarBaru->gedung->nama_gedung ?? '';
-            return redirect()->route('resepsionis.checkout.index')
-                ->with('success', "Peserta {$namaPeserta} berhasil dipindahkan dari Kamar {$nomorLama} ke Kamar {$nomorBaru} ({$namaGedungBaru}). Data berhasil diperbarui.");
-        }
+        $namaPeserta = $transaksi->peserta->nama_peserta ?? 'Peserta';
+        $nomorLama = $kamarLama ? $kamarLama->nomor_kamar : '-';
+        $nomorBaru = $kamarBaru->nomor_kamar;
+        $namaGedungBaru = $kamarBaru->gedung->nama_gedung ?? '';
 
         return redirect()->route('resepsionis.checkout.index')
-            ->with('success', "Data peserta {$namaPeserta} berhasil diperbarui.");
+            ->with('success', "Peserta {$namaPeserta} berhasil dipindahkan dari Kamar {$nomorLama} ke Kamar {$nomorBaru} ({$namaGedungBaru}).");
     }
 }
