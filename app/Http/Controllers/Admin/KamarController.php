@@ -23,16 +23,20 @@ class KamarController extends Controller
 
         if ($request->filled('status')) {
             $status = $request->status;
-            if ($status === 'kosong') {
-                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
-            } elseif ($status === '1_terisi') {
-                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 1');
-            } elseif ($status === '2_terisi') {
-                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 2');
-            } elseif ($status === '3_terisi' || $status === 'penuh') {
-                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") >= 3');
+            if ($status === 'rusak') {
+                $query->where('status', 'rusak');
+            } elseif ($status === 'kosong') {
+                $query->where('status', '!=', 'rusak')
+                      ->where(function ($q) {
+                          $q->where('status', 'kosong')
+                            ->orWhereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
+                      });
             } elseif ($status === 'terisi') {
-                $query->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
+                $query->where('status', '!=', 'rusak')
+                      ->where(function ($q) {
+                          $q->where('status', 'terisi')
+                            ->orWhereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
+                      });
             }
         }
 
@@ -62,6 +66,7 @@ class KamarController extends Controller
                 Rule::unique('kamars')->where(fn ($query) => $query->where('gedung_id', $request->gedung_id))
             ],
             'kapasitas' => 'required|integer|min:1|max:3',
+            'status' => 'required|in:kosong,terisi,rusak',
         ], [
             'gedung_id.required' => 'Pilih gedung terlebih dahulu.',
             'nomor_kamar.required' => 'Nomor kamar wajib diisi.',
@@ -69,13 +74,15 @@ class KamarController extends Controller
             'kapasitas.required' => 'Kapasitas kamar wajib diisi.',
             'kapasitas.min' => 'Kapasitas minimal 1 orang.',
             'kapasitas.max' => 'Kapasitas maksimal 3 orang per kamar.',
+            'status.required' => 'Status kamar wajib dipilih.',
+            'status.in' => 'Status kamar harus Kosong, Terisi, atau Rusak.',
         ]);
 
         Kamar::create([
             'gedung_id' => $validated['gedung_id'],
             'nomor_kamar' => $validated['nomor_kamar'],
             'kapasitas' => $validated['kapasitas'],
-            'status' => 'kosong',
+            'status' => $validated['status'],
         ]);
 
         return redirect()->route('admin.kamar.index')->with('success', 'Kamar berhasil ditambahkan.');
@@ -100,7 +107,7 @@ class KamarController extends Controller
                     ->ignore($kamar->id)
             ],
             'kapasitas' => 'required|integer|min:1|max:3',
-            'status' => 'nullable|in:kosong,terisi',
+            'status' => 'required|in:kosong,terisi,rusak',
         ], [
             'gedung_id.required' => 'Pilih gedung terlebih dahulu.',
             'nomor_kamar.required' => 'Nomor kamar wajib diisi.',
@@ -108,6 +115,8 @@ class KamarController extends Controller
             'kapasitas.required' => 'Kapasitas kamar wajib diisi.',
             'kapasitas.min' => 'Kapasitas minimal 1 orang.',
             'kapasitas.max' => 'Kapasitas maksimal 3 orang per kamar.',
+            'status.required' => 'Status kamar wajib dipilih.',
+            'status.in' => 'Status kamar harus Kosong, Terisi, atau Rusak.',
         ]);
 
         $kamar->update($validated);

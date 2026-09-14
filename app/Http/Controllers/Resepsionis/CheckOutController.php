@@ -112,6 +112,11 @@ class CheckOutController extends Controller
 
         $kamarLama = $transaksi->kamar;
         $kamarBaru = Kamar::with('gedung')->findOrFail($validated['kamar_id']);
+
+        if ($kamarBaru->status === 'rusak') {
+            return back()->with('error', "Kamar {$kamarBaru->nomor_kamar} sedang berstatus rusak dan tidak dapat ditempati.");
+        }
+
         $activeInNew = $kamarBaru->activeTransaksi()->count();
 
         if ($activeInNew >= $kamarBaru->kapasitas) {

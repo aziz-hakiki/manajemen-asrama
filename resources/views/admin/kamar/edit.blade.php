@@ -81,6 +81,7 @@
                     >
                         <option value="kosong" {{ old('status', $kamar->status) === 'kosong' ? 'selected' : '' }}>Kosong</option>
                         <option value="terisi" {{ old('status', $kamar->status) === 'terisi' ? 'selected' : '' }}>Terisi</option>
+                        <option value="rusak" {{ old('status', $kamar->status) === 'rusak' ? 'selected' : '' }}>Rusak</option>
                     </select>
                 </div>
 

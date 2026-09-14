@@ -52,10 +52,9 @@
             <div>
                 <select name="status" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-xs transition-all">
                     <option value="">Semua Status</option>
-                    <option value="kosong" {{ request('status') == 'kosong' ? 'selected' : '' }}>Kosong (0 Terisi)</option>
-                    <option value="1_terisi" {{ request('status') == '1_terisi' ? 'selected' : '' }}>1 Terisi</option>
-                    <option value="2_terisi" {{ request('status') == '2_terisi' ? 'selected' : '' }}>2 Terisi</option>
-                    <option value="3_terisi" {{ request('status') == '3_terisi' ? 'selected' : '' }}>3 Terisi (Penuh)</option>
+                    <option value="kosong" {{ request('status') == 'kosong' ? 'selected' : '' }}>Kosong</option>
+                    <option value="terisi" {{ request('status') == 'terisi' ? 'selected' : '' }}>Terisi</option>
+                    <option value="rusak" {{ request('status') == 'rusak' ? 'selected' : '' }}>Rusak</option>
                 </select>
             </div>
 
@@ -108,7 +107,12 @@
                                 {{ $kamar->kapasitas }} Orang
                             </td>
                             <td class="px-6 py-4">
-                                @if($terisiCount === 0)
+                                @if($kamar->status === 'rusak')
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/60">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                        Rusak
+                                    </span>
+                                @elseif($terisiCount === 0 && $kamar->status !== 'terisi')
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                         Kosong
@@ -135,16 +139,18 @@
                                             👥 {{ $kamar->activeTransaksi->pluck('peserta.nama_peserta')->filter()->join(', ') }}
                                         </span>
                                     </div>
-                                @else
+                                @elseif($terisiCount >= 3)
                                     <div class="flex flex-col gap-1 items-start">
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/60">
                                             <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                            3 Terisi
-                                        </span>
-                                        <span class="text-[11px] text-rose-600/80 font-medium">
-                                            Penuh (3/3)
+                                            3 Terisi (Penuh)
                                         </span>
                                     </div>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                        Terisi
+                                    </span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">

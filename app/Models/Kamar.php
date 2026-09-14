@@ -52,6 +52,10 @@ class Kamar extends Model
 
     public function getStatusLabelAttribute(): string
     {
+        if ($this->status === 'rusak') {
+            return 'Rusak';
+        }
+
         $count = $this->terisi_count;
         if ($count === 0) {
             return 'Kosong';
@@ -67,6 +71,10 @@ class Kamar extends Model
 
     public function isAvailable(): bool
     {
+        if ($this->status === 'rusak') {
+            return false;
+        }
+
         return $this->terisi_count < $this->kapasitas;
     }
 

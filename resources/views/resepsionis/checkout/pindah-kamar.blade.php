@@ -148,9 +148,10 @@
                                             @foreach($gedung->kamars as $kamar)
                                                 @php
                                                     $isCurrentKamar = ($kamar->id == $transaksi->kamar_id);
+                                                    $isRusak = ($kamar->status === 'rusak');
                                                     $sisa = max(0, $kamar->kapasitas - $kamar->terisi_count);
                                                     $isFull = ($sisa <= 0 && !$isCurrentKamar);
-                                                    $isDisabled = ($isCurrentKamar || $isFull);
+                                                    $isDisabled = ($isCurrentKamar || $isFull || $isRusak);
                                                 @endphp
                                                 <option 
                                                     value="{{ $kamar->id }}" 
@@ -158,7 +159,9 @@
                                                     {{ old('kamar_id') == $kamar->id ? 'selected' : '' }}
                                                 >
                                                     Kamar {{ $kamar->nomor_kamar }} — Kapasitas: {{ $kamar->kapasitas }} Orang
-                                                    @if($isCurrentKamar)
+                                                    @if($isRusak)
+                                                        (Rusak - Tidak Dapat Ditempati)
+                                                    @elseif($isCurrentKamar)
                                                         (Kamar Saat Ini - Sedang Ditempati)
                                                     @elseif($isFull)
                                                         (Penuh - 0 Slot Tersedia)

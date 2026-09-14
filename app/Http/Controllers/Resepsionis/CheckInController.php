@@ -42,9 +42,10 @@ class CheckInController extends Controller
             ->orderBy('nama_peserta')
             ->get();
 
-        // Kamar yang masih memiliki kapasitas kosong (terisi_count < kapasitas)
+        // Kamar yang masih memiliki kapasitas kosong (terisi_count < kapasitas) dan tidak rusak
         $gedungs = Gedung::with(['kamars' => function ($q) {
-            $q->withCount(['activeTransaksi as terisi_count'])
+            $q->where('status', '!=', 'rusak')
+              ->withCount(['activeTransaksi as terisi_count'])
               ->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") < kamars.kapasitas')
               ->orderBy('nomor_kamar');
         }])->get();
@@ -69,6 +70,10 @@ class CheckInController extends Controller
 
         $kamar = Kamar::findOrFail($validated['kamar_id']);
         $peserta = Peserta::findOrFail($validated['peserta_id']);
+
+        if ($kamar->status === 'rusak') {
+            return back()->with('error', "Kamar {$kamar->nomor_kamar} sedang berstatus rusak dan tidak dapat digunakan.");
+        }
 
         $activeOccupants = $kamar->activeTransaksi()->count();
 
