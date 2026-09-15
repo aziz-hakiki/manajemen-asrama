@@ -34,10 +34,16 @@ class CheckInController extends Controller
 
     public function create(Request $request)
     {
+        $today = now()->toDateString();
+
         // Peserta yang belum check-in (tidak memiliki transaksi berstatus 'menginap')
+        // dan jadwal kegiatan diklat belum selesai (tanggal_selesai >= hari ini)
         $pesertas = Peserta::with('diklat')
             ->whereDoesntHave('transaksi', function ($q) {
                 $q->where('status', 'menginap');
+            })
+            ->whereHas('diklat', function ($q) use ($today) {
+                $q->whereDate('tanggal_selesai', '>=', $today);
             })
             ->orderBy('nama_peserta')
             ->get();
@@ -51,6 +57,10 @@ class CheckInController extends Controller
         }])->get();
 
         $selectedPesertaId = $request->query('peserta_id');
+        if ($selectedPesertaId && ! $pesertas->contains('id', (int) $selectedPesertaId)) {
+            $selectedPesertaId = null;
+        }
+
         $selectedKamarId = $request->query('kamar_id');
 
         return view('resepsionis.checkin.create', compact('pesertas', 'gedungs', 'selectedPesertaId', 'selectedKamarId'));
@@ -69,10 +79,16 @@ class CheckInController extends Controller
         ]);
 
         $kamar = Kamar::findOrFail($validated['kamar_id']);
-        $peserta = Peserta::findOrFail($validated['peserta_id']);
+        $peserta = Peserta::with('diklat')->findOrFail($validated['peserta_id']);
 
         if ($kamar->status === 'rusak') {
             return back()->with('error', "Kamar {$kamar->nomor_kamar} sedang berstatus rusak dan tidak dapat digunakan.");
+        }
+
+        // Pastikan jadwal kegiatan diklat belum selesai
+        if ($peserta->diklat && $peserta->diklat->tanggal_selesai < now()->toDateString()) {
+            $tanggalSelesaiFormatted = \Carbon\Carbon::parse($peserta->diklat->tanggal_selesai)->translatedFormat('d F Y');
+            return back()->with('error', "Kegiatan diklat {$peserta->diklat->nama_diklat} telah selesai pada {$tanggalSelesaiFormatted}. Peserta tidak dapat melakukan check-in.")->withInput();
         }
 
         $activeOccupants = $kamar->activeTransaksi()->count();

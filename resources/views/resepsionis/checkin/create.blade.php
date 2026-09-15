@@ -30,12 +30,16 @@
                     <!-- Pilih Peserta (Searchable Dropdown / Live Auto-Filter & Sort) -->
                     @php
                         $pesertaList = $pesertas->map(function($p) {
+                            $jadwalDiklat = ($p->diklat && $p->diklat->tanggal_selesai) 
+                                ? \Carbon\Carbon::parse($p->diklat->tanggal_mulai)->translatedFormat('d M') . ' s/d ' . \Carbon\Carbon::parse($p->diklat->tanggal_selesai)->translatedFormat('d M Y')
+                                : '';
                             return [
                                 'id' => (string) $p->id,
                                 'nama' => $p->nama_peserta,
                                 'nip' => $p->nip_nik ?? '',
                                 'instansi' => $p->instansi ?? 'Umum',
                                 'diklat' => $p->diklat->nama_diklat ?? 'Program Diklat',
+                                'jadwal' => $jadwalDiklat,
                                 'jenis_kelamin' => $p->jenis_kelamin ?? '',
                                 'keterangan' => $p->keterangan ?? 'Peserta',
                                 'searchText' => strtolower($p->nama_peserta . ' ' . ($p->nip_nik ?? '') . ' ' . ($p->instansi ?? '') . ' ' . ($p->diklat->nama_diklat ?? '') . ' ' . ($p->keterangan ?? '') . ' ' . ($p->jenis_kelamin ?? '')),
@@ -130,7 +134,7 @@
                             <!-- Search info bar -->
                             <div class="px-3.5 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
                                 <span>
-                                    Ditemukan <strong class="text-slate-800" x-text="filteredItems.length"></strong> peserta belum check-in
+                                    Ditemukan <strong class="text-slate-800" x-text="filteredItems.length"></strong> peserta diklat aktif (belum check-in)
                                 </span>
                                 <span class="text-slate-400 text-[10px]">Gunakan panah ↑↓ & Enter</span>
                             </div>
@@ -177,6 +181,9 @@
                                                 </span>
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-medium">
                                                     🎓 <span x-text="item.diklat"></span>
+                                                    <template x-if="item.jadwal">
+                                                        <span class="text-indigo-400 font-normal ml-0.5" x-text="'(' + item.jadwal + ')'"></span>
+                                                    </template>
                                                 </span>
                                             </div>
                                         </div>
