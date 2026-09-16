@@ -120,12 +120,59 @@
                         <span>Check-out</span>
                     </x-sidebar-link>
 
-                    <x-sidebar-link :href="route('resepsionis.kamar-kosong.index')" :active="request()->routeIs('resepsionis.kamar-kosong.*')">
-                        <svg class="w-5 h-5 text-slate-500 {{ request()->routeIs('resepsionis.kamar-kosong.*') ? 'text-indigo-600' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                        </svg>
-                        <span>Kamar Kosong</span>
-                    </x-sidebar-link>
+                    <!-- Dropdown Menu: Kamar Kosong -->
+                    <div x-data="{ open: {{ request()->routeIs('resepsionis.kamar-kosong.*') ? 'true' : 'false' }} }" class="space-y-1">
+                        <button 
+                            @click="open = !open" 
+                            type="button"
+                            class="w-full group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('resepsionis.kamar-kosong.*') ? 'bg-indigo-50/70 text-indigo-700 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}"
+                        >
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 {{ request()->routeIs('resepsionis.kamar-kosong.*') ? 'text-indigo-600' : 'text-slate-500 group-hover:text-slate-700' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                </svg>
+                                <span>Kamar Kosong</span>
+                            </div>
+                            <svg 
+                                class="w-4 h-4 text-slate-400 transition-transform duration-200" 
+                                :class="open ? 'rotate-180 text-indigo-600' : ''" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <!-- Sub Menu Asrama -->
+                        <div 
+                            x-show="open" 
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 -translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 -translate-y-1"
+                            class="pl-4 pr-1 space-y-1 border-l-2 border-slate-100 ml-5 my-1"
+                            :style="open ? '' : 'display: none;'"
+                        >
+                            @php
+                                $navGedungs = \App\Models\Gedung::orderBy('nama_gedung', 'asc')->get();
+                            @endphp
+                            @foreach($navGedungs as $nGedung)
+                                @php
+                                    $isSubActive = request()->routeIs('resepsionis.kamar-kosong.*') && (request('gedung_id') == $nGedung->id || (!request()->filled('gedung_id') && $loop->first));
+                                @endphp
+                                <a 
+                                    href="{{ route('resepsionis.kamar-kosong.index', ['gedung_id' => $nGedung->id]) }}"
+                                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all {{ $isSubActive ? 'bg-indigo-50 text-indigo-700 font-bold border-l-2 border-indigo-600' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50' }}"
+                                >
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $isSubActive ? 'bg-indigo-600' : 'bg-slate-300' }}"></span>
+                                    <span>{{ $nGedung->nama_gedung }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
 
                     <x-sidebar-link :href="route('resepsionis.penghuni.index')" :active="request()->routeIs('resepsionis.penghuni.*')">
                         <svg class="w-5 h-5 text-slate-500 {{ request()->routeIs('resepsionis.penghuni.*') ? 'text-indigo-600' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">

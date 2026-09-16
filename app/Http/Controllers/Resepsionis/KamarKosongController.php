@@ -11,13 +11,22 @@ class KamarKosongController extends Controller
 {
     public function index(Request $request)
     {
-        $gedungs = Gedung::all();
+        $gedungs = Gedung::orderBy('nama_gedung', 'asc')->get();
+
+        // Jika tidak ada gedung_id atau gedung_id tidak valid, arahkan ke gedung pertama (misal: Asrama A)
+        if (!$request->filled('gedung_id') && $gedungs->isNotEmpty()) {
+            return redirect()->route('resepsionis.kamar-kosong.index', [
+                'gedung_id' => $gedungs->first()->id,
+            ]);
+        }
+
+        $selectedGedung = $gedungs->firstWhere('id', $request->gedung_id) ?? $gedungs->first();
 
         $query = Kamar::with(['gedung', 'activeTransaksi.peserta.diklat'])
             ->withCount(['activeTransaksi as terisi_count']);
 
-        if ($request->filled('gedung_id')) {
-            $query->where('gedung_id', $request->gedung_id);
+        if ($selectedGedung) {
+            $query->where('gedung_id', $selectedGedung->id);
         }
 
         if ($request->filled('status')) {
@@ -45,16 +54,22 @@ class KamarKosongController extends Controller
 
         $kamars = $query->orderBy('nomor_kamar')->paginate(16)->withQueryString();
 
-        // Statistik keseluruhan ketersediaan
-        $totalKamar = Kamar::count();
-        $totalRusak = Kamar::where('status', 'rusak')->count();
-        $totalKosong = Kamar::where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
-        $totalSebagian = Kamar::where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") BETWEEN 1 AND (kamars.kapasitas - 1)')->count();
-        $totalPenuh = Kamar::where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") >= kamars.kapasitas')->count();
+        // Statistik ketersediaan untuk gedung yang sedang dipilih
+        $statsQuery = Kamar::query();
+        if ($selectedGedung) {
+            $statsQuery->where('gedung_id', $selectedGedung->id);
+        }
+
+        $totalKamar = (clone $statsQuery)->count();
+        $totalRusak = (clone $statsQuery)->where('status', 'rusak')->count();
+        $totalKosong = (clone $statsQuery)->where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
+        $totalSebagian = (clone $statsQuery)->where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") BETWEEN 1 AND (kamars.kapasitas - 1)')->count();
+        $totalPenuh = (clone $statsQuery)->where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") >= kamars.kapasitas')->count();
 
         return view('resepsionis.kamar-kosong.index', compact(
             'kamars',
             'gedungs',
+            'selectedGedung',
             'totalKamar',
             'totalRusak',
             'totalKosong',

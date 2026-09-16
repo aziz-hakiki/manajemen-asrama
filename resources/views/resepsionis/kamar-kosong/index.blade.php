@@ -1,8 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col">
-            <h1 class="text-xl font-bold text-slate-800 tracking-tight">Ketersediaan Kamar Asrama</h1>
-            <p class="text-xs text-slate-500 font-medium">Pemantauan kapasitas, hunian, dan alokasi kamar siap huni</p>
+            <div class="flex items-center gap-2.5">
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">Ketersediaan Kamar</h1>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">
+                    {{ $selectedGedung->nama_gedung ?? 'Asrama' }}
+                </span>
+            </div>
+            <p class="text-xs text-slate-500 font-medium">Pemantauan kapasitas, hunian, dan alokasi kamar siap huni di {{ $selectedGedung->nama_gedung ?? 'Asrama' }}</p>
         </div>
     </x-slot>
 
@@ -11,7 +16,7 @@
     <!-- Top Stats & Header -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-            <h2 class="text-lg font-bold text-slate-800">Status Ketersediaan Kamar</h2>
+            <h2 class="text-lg font-bold text-slate-800">Status Ketersediaan Kamar - {{ $selectedGedung->nama_gedung ?? '' }}</h2>
             <p class="text-xs text-slate-500">Pilih kamar yang masih tersedia untuk langsung memproses check-in peserta</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -44,7 +49,9 @@
 
     <!-- Filter Bar Card -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4">
-        <form method="GET" action="{{ route('resepsionis.kamar-kosong.index') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <form method="GET" action="{{ route('resepsionis.kamar-kosong.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input type="hidden" name="gedung_id" value="{{ $selectedGedung->id ?? request('gedung_id') }}">
+
             <!-- Search -->
             <div>
                 <input 
@@ -54,18 +61,6 @@
                     placeholder="Cari nomor kamar..." 
                     class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-xs transition-all"
                 >
-            </div>
-
-            <!-- Filter Gedung -->
-            <div>
-                <select name="gedung_id" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-xs transition-all">
-                    <option value="">Semua Gedung</option>
-                    @foreach($gedungs as $g)
-                        <option value="{{ $g->id }}" {{ request('gedung_id') == $g->id ? 'selected' : '' }}>
-                            {{ $g->nama_gedung }}
-                        </option>
-                    @endforeach
-                </select>
             </div>
 
             <!-- Filter Status Ketersediaan -->
@@ -85,8 +80,8 @@
                 <button type="submit" class="w-full px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition-colors">
                     Filter
                 </button>
-                @if(request()->hasAny(['search', 'gedung_id', 'status']))
-                    <a href="{{ route('resepsionis.kamar-kosong.index') }}" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold transition-colors" title="Reset Filter">
+                @if(request()->hasAny(['search', 'status']))
+                    <a href="{{ route('resepsionis.kamar-kosong.index', ['gedung_id' => $selectedGedung->id ?? request('gedung_id')]) }}" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold transition-colors" title="Reset Filter">
                         Reset
                     </a>
                 @endif
@@ -252,8 +247,8 @@
                 <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
-                <p class="text-sm font-semibold">Tidak ada kamar yang sesuai dengan kriteria filter.</p>
-                <p class="text-xs text-slate-400 mt-1">Coba sesuaikan pilihan gedung atau status ketersediaan.</p>
+                <p class="text-sm font-semibold">Tidak ada kamar yang sesuai di {{ $selectedGedung->nama_gedung ?? 'gedung ini' }}.</p>
+                <p class="text-xs text-slate-400 mt-1">Coba sesuaikan pencarian nomor kamar atau filter status.</p>
             </div>
         @endforelse
     </div>
