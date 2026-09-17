@@ -92,7 +92,7 @@
             </div>
             <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span>Kapasitas Tersedia</span>
-                <span class="font-semibold text-blue-600">Siap Pakai</span>
+                <a href="{{ route('pimpinan.kamar-kosong.index') }}" class="font-semibold text-blue-600 hover:underline">Lihat Kamar &rarr;</a>
             </div>
         </div>
 

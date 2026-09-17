@@ -51,6 +51,7 @@
                         <th class="px-6 py-4 text-center">Total Kamar</th>
                         <th class="px-6 py-4 text-center">Kamar Terisi</th>
                         <th class="px-6 py-4 text-center">Kamar Kosong</th>
+                        <th class="px-6 py-4 text-center">Kamar Rusak</th>
                         <th class="px-6 py-4 text-center">Total Kapasitas</th>
                         <th class="px-6 py-4">Tingkat Okupansi</th>
                         <th class="px-6 py-4 text-right">Rincian</th>
@@ -62,6 +63,7 @@
                             $totalKamar = $gedung->kamars_count ?? 0;
                             $terisi = $gedung->kamars_terisi_count ?? 0;
                             $kosong = $gedung->kamars_kosong_count ?? 0;
+                            $rusak = $gedung->kamars_rusak_count ?? 0;
                             $rate = $totalKamar > 0 ? round(($terisi / $totalKamar) * 100) : 0;
                         @endphp
                         <tr class="hover:bg-slate-50/80 transition-colors {{ (request('gedung_id') == $gedung->id) ? 'bg-indigo-50/40' : '' }}">
@@ -86,6 +88,11 @@
                                     {{ $kosong }}
                                 </span>
                             </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold {{ $rusak > 0 ? 'bg-slate-100 text-slate-600' : 'bg-slate-50 text-slate-400' }}">
+                                    {{ $rusak }}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 text-center font-medium text-slate-700">
                                 {{ $gedung->total_kapasitas ?? 0 }} Orang
                             </td>
@@ -106,7 +113,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="8" class="px-6 py-12 text-center text-slate-400">
                                 Belum ada data gedung.
                             </td>
                         </tr>
@@ -133,17 +140,22 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     @forelse($kamarsGedung as $kamar)
                         @php
+                            $isRusak = ($kamar->status === 'rusak');
                             $terisiCount = $kamar->transaksi->count();
                             $isFull = $terisiCount >= $kamar->kapasitas;
-                            $isKosong = $terisiCount === 0;
+                            $isKosong = ($terisiCount === 0 && !$isRusak);
                         @endphp
-                        <div class="p-4 rounded-xl border {{ $isKosong ? 'border-emerald-200 bg-emerald-50/30' : ($isFull ? 'border-rose-200 bg-rose-50/30' : 'border-amber-200 bg-amber-50/30') }} flex flex-col justify-between">
+                        <div class="p-4 rounded-xl border {{ $isRusak ? 'border-slate-300 bg-slate-100/60' : ($isKosong ? 'border-emerald-200 bg-emerald-50/30' : ($isFull ? 'border-rose-200 bg-rose-50/30' : 'border-amber-200 bg-amber-50/30')) }} flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="font-extrabold text-base text-slate-800 font-mono">
                                         Kamar {{ $kamar->nomor_kamar }}
                                     </span>
-                                    @if($isKosong)
+                                    @if($isRusak)
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300">
+                                            Rusak
+                                        </span>
+                                    @elseif($isKosong)
                                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
                                             Kosong
                                         </span>
@@ -153,18 +165,33 @@
                                         </span>
                                     @else
                                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">
-                                            3 Terisi (Penuh)
+                                            {{ $terisiCount }} Terisi (Penuh)
                                         </span>
                                     @endif
                                 </div>
                                 <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
                                     <span>Kapasitas: {{ $kamar->kapasitas }} Orang</span>
-                                    <span class="font-semibold {{ $isKosong ? 'text-emerald-600' : ($isFull ? 'text-rose-600' : 'text-amber-600') }}">
-                                        {{ $terisiCount }}/{{ $kamar->kapasitas }} Terisi
-                                    </span>
+                                    @if($isRusak)
+                                        <span class="font-semibold text-slate-600">
+                                            Dalam Perbaikan
+                                        </span>
+                                    @else
+                                        <span class="font-semibold {{ $isKosong ? 'text-emerald-600' : ($isFull ? 'text-rose-600' : 'text-amber-600') }}">
+                                            {{ $terisiCount }}/{{ $kamar->kapasitas }} Terisi
+                                        </span>
+                                    @endif
                                 </div>
 
-                                @if($kamar->transaksi->isNotEmpty())
+                                @if($isRusak)
+                                    <div class="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500">
+                                        <div class="flex items-center gap-1.5 text-amber-700 font-medium text-[11px] bg-amber-50 p-2 rounded-lg border border-amber-200">
+                                            <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                            <span>Kamar rusak (dalam perbaikan)</span>
+                                        </div>
+                                    </div>
+                                @elseif($kamar->transaksi->isNotEmpty())
                                     <div class="mt-2 pt-2 border-t border-slate-200 text-xs space-y-2">
                                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Penghuni ({{ $terisiCount }}):</p>
                                         @foreach($kamar->transaksi as $tr)

@@ -16,7 +16,7 @@ class LaporanController extends Controller
     public function dashboard()
     {
         $totalKamar = Kamar::count();
-        $kamarKosong = Kamar::whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
+        $kamarKosong = Kamar::where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
         $kamarTerisi = Kamar::whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0')->count();
         $penghuniAktif = TransaksiAsrama::where('status', 'menginap')->count();
         $totalDiklat = Diklat::count();
@@ -25,7 +25,8 @@ class LaporanController extends Controller
         $tingkatHunian = $totalKamar > 0 ? round(($kamarTerisi / $totalKamar) * 100) : 0;
 
         $gedungs = Gedung::withCount(['kamars', 'kamars as kamars_kosong_count' => function ($q) {
-            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
+            $q->where('status', '!=', 'rusak')
+              ->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
         }, 'kamars as kamars_terisi_count' => function ($q) {
             $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
         }])->get();
@@ -107,9 +108,13 @@ class LaporanController extends Controller
     public function laporanPerGedung(Request $request)
     {
         $gedungs = Gedung::withCount(['kamars', 'kamars as kamars_kosong_count' => function ($q) {
-            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
+            $q->where('status', '!=', 'rusak')
+              ->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
         }, 'kamars as kamars_terisi_count' => function ($q) {
-            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
+            $q->where('status', '!=', 'rusak')
+              ->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
+        }, 'kamars as kamars_rusak_count' => function ($q) {
+            $q->where('status', 'rusak');
         }])->withSum('kamars as total_kapasitas', 'kapasitas')->get();
 
         $selectedGedung = null;

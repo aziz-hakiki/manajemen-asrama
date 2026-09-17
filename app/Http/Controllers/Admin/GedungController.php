@@ -11,7 +11,8 @@ class GedungController extends Controller
     public function index()
     {
         $gedungs = Gedung::withCount(['kamars', 'kamars as kamars_kosong_count' => function ($q) {
-            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
+            $q->where('status', '!=', 'rusak')
+              ->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
         }, 'kamars as kamars_terisi_count' => function ($q) {
             $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
         }])->latest()->paginate(10);

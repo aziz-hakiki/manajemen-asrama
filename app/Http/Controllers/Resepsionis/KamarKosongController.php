@@ -15,7 +15,14 @@ class KamarKosongController extends Controller
 
         // Jika tidak ada gedung_id atau gedung_id tidak valid, arahkan ke gedung pertama (misal: Asrama A)
         if (!$request->filled('gedung_id') && $gedungs->isNotEmpty()) {
-            return redirect()->route('resepsionis.kamar-kosong.index', [
+            if ($request->routeIs('admin.*')) {
+                $routeName = 'admin.kamar-kosong.index';
+            } elseif ($request->routeIs('pimpinan.*')) {
+                $routeName = 'pimpinan.kamar-kosong.index';
+            } else {
+                $routeName = 'resepsionis.kamar-kosong.index';
+            }
+            return redirect()->route($routeName, [
                 'gedung_id' => $gedungs->first()->id,
             ]);
         }

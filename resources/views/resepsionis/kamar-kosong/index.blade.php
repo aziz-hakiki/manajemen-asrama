@@ -17,7 +17,11 @@
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
             <h2 class="text-lg font-bold text-slate-800">Status Ketersediaan Kamar - {{ $selectedGedung->nama_gedung ?? '' }}</h2>
-            <p class="text-xs text-slate-500">Pilih kamar yang masih tersedia untuk langsung memproses check-in peserta</p>
+            @if(in_array(auth()->user()->role, ['pimpinan', 'admin']))
+                <p class="text-xs text-slate-500">Monitoring status ketersediaan dan kapasitas kamar di {{ $selectedGedung->nama_gedung ?? 'Asrama' }}</p>
+            @else
+                <p class="text-xs text-slate-500">Pilih kamar yang masih tersedia untuk langsung memproses check-in peserta</p>
+            @endif
         </div>
         <div class="flex flex-wrap items-center gap-2">
             <!-- Kosong -->
@@ -47,9 +51,19 @@
         </div>
     </div>
 
+    @php
+        if (request()->routeIs('admin.*')) {
+            $targetRoute = 'admin.kamar-kosong.index';
+        } elseif (request()->routeIs('pimpinan.*')) {
+            $targetRoute = 'pimpinan.kamar-kosong.index';
+        } else {
+            $targetRoute = 'resepsionis.kamar-kosong.index';
+        }
+    @endphp
+
     <!-- Filter Bar Card -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4">
-        <form method="GET" action="{{ route('resepsionis.kamar-kosong.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form method="GET" action="{{ route($targetRoute) }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input type="hidden" name="gedung_id" value="{{ $selectedGedung->id ?? request('gedung_id') }}">
 
             <!-- Search -->
@@ -81,7 +95,7 @@
                     Filter
                 </button>
                 @if(request()->hasAny(['search', 'status']))
-                    <a href="{{ route('resepsionis.kamar-kosong.index', ['gedung_id' => $selectedGedung->id ?? request('gedung_id')]) }}" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold transition-colors" title="Reset Filter">
+                    <a href="{{ route($targetRoute, ['gedung_id' => $selectedGedung->id ?? request('gedung_id')]) }}" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold transition-colors" title="Reset Filter">
                         Reset
                     </a>
                 @endif
@@ -199,46 +213,70 @@
 
                 <!-- Footer Action Button -->
                 <div class="mt-4 pt-4 border-t border-slate-100">
-                    @if($isRusak)
-                        <!-- Rusak: Abu-Abu Gelap Disabled -->
-                        <button type="button" disabled 
-                                style="background-color: #334155; color: #f8fafc;"
-                                class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-semibold text-xs cursor-not-allowed select-none shadow-xs">
-                            <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                            </svg>
-                            <span>Tidak Bisa Check-in (Kamar Rusak)</span>
-                        </button>
-                    @elseif($isKosong)
-                        <!-- 0 Terisi: Hijau -->
-                        <a href="{{ route('resepsionis.checkin.create', ['kamar_id' => $kamar->id]) }}" 
-                           style="background-color: #059669; color: #ffffff;"
-                           class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl hover:opacity-90 font-semibold text-xs shadow-xs transition-opacity">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                            </svg>
-                            <span>Check-in ke Kamar Ini</span>
-                        </a>
-                    @elseif(!$isFull)
-                        <!-- 1 atau 2 Terisi: Orange -->
-                        <a href="{{ route('resepsionis.checkin.create', ['kamar_id' => $kamar->id]) }}" 
-                           style="background-color: #f97316; color: #ffffff;"
-                           class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl hover:opacity-90 font-semibold text-xs shadow-xs transition-opacity">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                            </svg>
-                            <span>Check-in ke Kamar Ini</span>
-                        </a>
+                    @if(in_array(auth()->user()->role, ['pimpinan', 'admin']))
+                        @if($isRusak)
+                            <div class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 text-slate-500 font-semibold text-xs border border-slate-200 select-none">
+                                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                                <span>Status: Rusak (Dalam Perbaikan)</span>
+                            </div>
+                        @elseif($isKosong)
+                            <div class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-50 text-emerald-700 font-semibold text-xs border border-emerald-200 select-none">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>Status: Kosong (Siap Huni)</span>
+                            </div>
+                        @elseif(!$isFull)
+                            <div class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-amber-50 text-amber-700 font-semibold text-xs border border-amber-200 select-none">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span>Status: Terisi {{ $terisi }}/{{ $kapasitas }} (Sisa {{ $sisa }} Bed)</span>
+                            </div>
+                        @else
+                            <div class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-rose-50 text-rose-700 font-semibold text-xs border border-rose-200 select-none">
+                                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                <span>Status: Penuh ({{ $terisi }}/{{ $kapasitas }})</span>
+                            </div>
+                        @endif
                     @else
-                        <!-- 3 Terisi: Merah Disabled -->
-                        <button type="button" disabled 
-                                style="background-color: #e11d48; color: #ffffff;"
-                                class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-semibold text-xs shadow-xs opacity-75 cursor-not-allowed">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                            </svg>
-                            <span>Kamar Penuh</span>
-                        </button>
+                        @if($isRusak)
+                            <!-- Rusak: Abu-Abu Gelap Disabled -->
+                            <button type="button" disabled 
+                                    style="background-color: #334155; color: #f8fafc;"
+                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-semibold text-xs cursor-not-allowed select-none shadow-xs">
+                                <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                                <span>Tidak Bisa Check-in (Kamar Rusak)</span>
+                            </button>
+                        @elseif($isKosong)
+                            <!-- 0 Terisi: Hijau -->
+                            <a href="{{ route('resepsionis.checkin.create', ['kamar_id' => $kamar->id]) }}" 
+                               style="background-color: #059669; color: #ffffff;"
+                               class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl hover:opacity-90 font-semibold text-xs shadow-xs transition-opacity">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                </svg>
+                                <span>Check-in ke Kamar Ini</span>
+                            </a>
+                        @elseif(!$isFull)
+                            <!-- 1 atau 2 Terisi: Orange -->
+                            <a href="{{ route('resepsionis.checkin.create', ['kamar_id' => $kamar->id]) }}" 
+                               style="background-color: #f97316; color: #ffffff;"
+                               class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl hover:opacity-90 font-semibold text-xs shadow-xs transition-opacity">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                </svg>
+                                <span>Check-in ke Kamar Ini</span>
+                            </a>
+                        @else
+                            <!-- 3 Terisi: Merah Disabled -->
+                            <button type="button" disabled 
+                                    style="background-color: #e11d48; color: #ffffff;"
+                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-semibold text-xs shadow-xs opacity-75 cursor-not-allowed">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                                <span>Kamar Penuh</span>
+                            </button>
+                        @endif
                     @endif
                 </div>
             </div>

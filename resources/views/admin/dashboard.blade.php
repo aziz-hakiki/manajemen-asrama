@@ -69,7 +69,7 @@
                 <span class="text-xs text-slate-500 font-medium">Kamar</span>
             </div>
             <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                <span class="text-emerald-600 font-medium">Kosong: {{ $kamarKosong ?? 0 }}</span>
+                <a href="{{ route('admin.kamar-kosong.index') }}" class="text-emerald-600 font-semibold hover:underline">Kosong: {{ $kamarKosong ?? 0 }} &rarr;</a>
                 <span class="text-rose-500 font-medium">Terisi: {{ $kamarTerisi ?? 0 }}</span>
             </div>
         </div>

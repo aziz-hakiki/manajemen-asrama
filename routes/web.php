@@ -47,7 +47,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', function () {
         $totalGedung = Gedung::count();
         $totalKamar = Kamar::count();
-        $kamarKosong = Kamar::whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
+        $kamarKosong = Kamar::where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
         $kamarTerisi = Kamar::whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0')->count();
         $totalDiklat = Diklat::count();
         $totalPeserta = Peserta::count();
@@ -55,7 +55,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         $totalUser = User::count();
 
         $gedungList = Gedung::withCount(['kamars', 'kamars as kamars_kosong_count' => function ($q) {
-            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
+            $q->where('status', '!=', 'rusak')
+              ->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
         }, 'kamars as kamars_terisi_count' => function ($q) {
             $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
         }])->get();
@@ -76,6 +77,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Master Data Resource Routes
     Route::resource('gedung', GedungController::class);
     Route::resource('kamar', KamarController::class);
+    Route::get('kamar-kosong', [KamarKosongController::class, 'index'])->name('kamar-kosong.index');
     Route::resource('diklat', DiklatController::class);
     
     // Import & Check Peserta Routes
@@ -99,11 +101,12 @@ Route::middleware(['auth', 'role:resepsionis'])->prefix('resepsionis')->name('re
     Route::get('/dashboard', function () {
         $checkinHariIni = TransaksiAsrama::whereDate('tanggal_masuk', today())->count();
         $checkoutHariIni = TransaksiAsrama::whereDate('tanggal_keluar', today())->count();
-        $totalKosong = Kamar::whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
+        $totalKosong = Kamar::where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
         $penghuniAktif = TransaksiAsrama::where('status', 'menginap')->count();
         
         $gedungs = Gedung::withCount(['kamars', 'kamars as kamars_kosong_count' => function ($q) {
-            $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
+            $q->where('status', '!=', 'rusak')
+              ->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
         }, 'kamars as kamars_terisi_count' => function ($q) {
             $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
         }])->get();
@@ -150,6 +153,7 @@ Route::middleware(['auth', 'role:pimpinan'])->prefix('pimpinan')->name('pimpinan
     Route::get('/laporan-hunian', [LaporanController::class, 'laporanHunian'])->name('laporan.hunian');
     Route::get('/laporan-gedung', [LaporanController::class, 'laporanPerGedung'])->name('laporan.gedung');
     Route::get('/laporan-diklat', [LaporanController::class, 'laporanPerDiklat'])->name('laporan.diklat');
+    Route::get('/kamar-kosong', [KamarKosongController::class, 'index'])->name('kamar-kosong.index');
 });
 
 require __DIR__.'/auth.php';
