@@ -13,6 +13,27 @@ class KamarKosongController extends Controller
     {
         $gedungs = Gedung::orderBy('nama_gedung', 'asc')->get();
 
+        $user = auth()->user();
+        $assignedGedungId = ($user && $user->role === 'resepsionis') ? $user->assignedGedungId() : null;
+
+        // Jika resepsionis memiliki gedung penugasan
+        if ($request->routeIs('resepsionis.*') && $assignedGedungId) {
+            if (!$request->filled('gedung_id')) {
+                return redirect()->route('resepsionis.kamar-kosong.index', [
+                    'gedung_id' => $assignedGedungId,
+                ]);
+            }
+
+            // Jika resepsionis mencoba mengakses asrama lain via URL
+            if ($request->gedung_id != $assignedGedungId) {
+                $assignedGedung = $gedungs->firstWhere('id', $assignedGedungId);
+                $namaGedung = $assignedGedung->nama_gedung ?? 'asrama penugasan Anda';
+                return redirect()->route('resepsionis.kamar-kosong.index', [
+                    'gedung_id' => $assignedGedungId,
+                ])->with('warning', "Akses dibatasi. Anda bertugas di {$namaGedung} dan tidak memiliki hak akses untuk membuka kamar di asrama lain.");
+            }
+        }
+
         // Jika tidak ada gedung_id atau gedung_id tidak valid, arahkan ke gedung pertama (misal: Asrama A)
         if (!$request->filled('gedung_id') && $gedungs->isNotEmpty()) {
             if ($request->routeIs('admin.*')) {

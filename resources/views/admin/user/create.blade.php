@@ -65,7 +65,7 @@
                         <button 
                             type="button" 
                             @click="showPassword = !showPassword"
-                            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none transition-colors"
+                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none transition-colors"
                             tabindex="-1"
                             title="Tampilkan / Sembunyikan Password"
                         >
@@ -80,21 +80,42 @@
                     </div>
                 </div>
 
-                <div>
+                <div x-data="{ selectedRole: '{{ old('role', '') }}' }">
                     <label for="role" class="block text-sm font-semibold text-slate-700 mb-1.5">
                         Peran / Hak Akses (Role) <span class="text-rose-500">*</span>
                     </label>
                     <select 
                         name="role" 
                         id="role" 
+                        x-model="selectedRole"
                         required
                         class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
                     >
                         <option value="">-- Pilih Peran Pengguna --</option>
-                        <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin (Akses Penuh Master Data)</option>
-                        <option value="resepsionis" {{ old('role') === 'resepsionis' ? 'selected' : '' }}>Resepsionis (Check-in & Check-out)</option>
-                        <option value="pimpinan" {{ old('role') === 'pimpinan' ? 'selected' : '' }}>Pimpinan (Laporan & Monitoring)</option>
+                        <option value="admin">Admin (Akses Penuh Master Data)</option>
+                        <option value="resepsionis">Resepsionis (Check-in & Check-out)</option>
+                        <option value="pimpinan">Pimpinan (Laporan & Monitoring)</option>
                     </select>
+
+                    <!-- Pilihan Penugasan Asrama untuk Resepsionis -->
+                    <div x-show="selectedRole === 'resepsionis'" x-transition class="mt-4 p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
+                        <label for="gedung_id" class="block text-sm font-semibold text-indigo-900 mb-1.5">
+                            Penugasan Asrama / Gedung
+                        </label>
+                        <select 
+                            name="gedung_id" 
+                            id="gedung_id" 
+                            class="w-full px-4 py-2.5 rounded-xl border border-indigo-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
+                        >
+                            <option value="">-- Semua Asrama (Akses Terbuka) --</option>
+                            @foreach($gedungs as $gedung)
+                                <option value="{{ $gedung->id }}" {{ old('gedung_id') == $gedung->id ? 'selected' : '' }}>
+                                    {{ $gedung->nama_gedung }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-indigo-700/80 mt-1.5">Pilih asrama spesifik agar resepsionis hanya dapat membuka sub-menu dan kamar di asrama tersebut.</p>
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">

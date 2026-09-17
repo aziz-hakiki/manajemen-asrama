@@ -102,9 +102,16 @@
                                         Administrator
                                     </span>
                                 @elseif($user->role === 'resepsionis')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        Resepsionis
-                                    </span>
+                                    <div class="flex flex-col gap-1 items-start">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            Resepsionis
+                                        </span>
+                                        @if($user->gedung)
+                                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200" title="Penugasan Asrama">
+                                                🏢 {{ $user->gedung->nama_gedung }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 @elseif($user->role === 'pimpinan')
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                                         Pimpinan

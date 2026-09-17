@@ -212,18 +212,35 @@
                         >
                             @php
                                 $navGedungs = \App\Models\Gedung::orderBy('nama_gedung', 'asc')->get();
+                                $userAssignedGedungId = auth()->user()->assignedGedungId();
                             @endphp
                             @foreach($navGedungs as $nGedung)
                                 @php
-                                    $isSubActive = request()->routeIs('resepsionis.kamar-kosong.*') && (request('gedung_id') == $nGedung->id || (!request()->filled('gedung_id') && $loop->first));
+                                    $isAllowed = is_null($userAssignedGedungId) || ($userAssignedGedungId == $nGedung->id);
+                                    $isSubActive = request()->routeIs('resepsionis.kamar-kosong.*') && (request('gedung_id') == $nGedung->id || (!request()->filled('gedung_id') && ($userAssignedGedungId == $nGedung->id || (is_null($userAssignedGedungId) && $loop->first))));
                                 @endphp
-                                <a 
-                                    href="{{ route('resepsionis.kamar-kosong.index', ['gedung_id' => $nGedung->id]) }}"
-                                    class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all {{ $isSubActive ? 'bg-indigo-50 text-indigo-700 font-bold border-l-2 border-indigo-600' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50' }}"
-                                >
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $isSubActive ? 'bg-indigo-600' : 'bg-slate-300' }}"></span>
-                                    <span>{{ $nGedung->nama_gedung }}</span>
-                                </a>
+                                @if($isAllowed)
+                                    <a 
+                                        href="{{ route('resepsionis.kamar-kosong.index', ['gedung_id' => $nGedung->id]) }}"
+                                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all {{ $isSubActive ? 'bg-indigo-50 text-indigo-700 font-bold border-l-2 border-indigo-600' : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50' }}"
+                                    >
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $isSubActive ? 'bg-indigo-600' : 'bg-slate-300' }}"></span>
+                                        <span>{{ $nGedung->nama_gedung }}</span>
+                                    </a>
+                                @else
+                                    <div 
+                                        class="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-400 bg-slate-50/80 cursor-not-allowed select-none opacity-60"
+                                        title="Akses dinonaktifkan (Anda tidak ditugaskan di {{ $nGedung->nama_gedung }})"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                            <span class="text-slate-400">{{ $nGedung->nama_gedung }}</span>
+                                        </div>
+                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Terkunci">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                @endif
                             @endforeach
                         </div>
                     </div>

@@ -49,12 +49,19 @@ class CheckInController extends Controller
             ->get();
 
         // Kamar yang masih memiliki kapasitas kosong (terisi_count < kapasitas) dan tidak rusak
-        $gedungs = Gedung::with(['kamars' => function ($q) {
+        $assignedGedungId = auth()->user()->assignedGedungId();
+        $gedungsQuery = Gedung::with(['kamars' => function ($q) {
             $q->where('status', '!=', 'rusak')
               ->withCount(['activeTransaksi as terisi_count'])
               ->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") < kamars.kapasitas')
               ->orderBy('nomor_kamar');
-        }])->get();
+        }]);
+
+        if ($assignedGedungId) {
+            $gedungsQuery->where('id', $assignedGedungId);
+        }
+
+        $gedungs = $gedungsQuery->get();
 
         $selectedPesertaId = $request->query('peserta_id');
         if ($selectedPesertaId && ! $pesertas->contains('id', (int) $selectedPesertaId)) {
@@ -80,6 +87,11 @@ class CheckInController extends Controller
 
         $kamar = Kamar::findOrFail($validated['kamar_id']);
         $peserta = Peserta::with('diklat')->findOrFail($validated['peserta_id']);
+
+        $assignedGedungId = auth()->user()->assignedGedungId();
+        if ($assignedGedungId && $kamar->gedung_id != $assignedGedungId) {
+            return back()->with('error', 'Anda hanya memiliki hak akses untuk melakukan check-in pada asrama yang ditugaskan kepada Anda.')->withInput();
+        }
 
         if ($kamar->status === 'rusak') {
             return back()->with('error', "Kamar {$kamar->nomor_kamar} sedang berstatus rusak dan tidak dapat digunakan.");

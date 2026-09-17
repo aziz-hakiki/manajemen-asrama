@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::with('gedung');
 
         if ($request->filled('role')) {
             $query->where('role', $request->role);
@@ -33,7 +33,8 @@ class UserController extends Controller
 
     public function create()
     {
-        return view('admin.user.create');
+        $gedungs = \App\Models\Gedung::orderBy('nama_gedung', 'asc')->get();
+        return view('admin.user.create', compact('gedungs'));
     }
 
     public function store(Request $request)
@@ -43,12 +44,14 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => ['required', 'string', Password::defaults()],
             'role' => 'required|in:admin,resepsionis,pimpinan',
+            'gedung_id' => 'nullable|exists:gedungs,id',
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Alamat email wajib diisi.',
             'email.unique' => 'Email ini sudah terdaftar.',
             'password.required' => 'Password wajib diisi.',
             'role.required' => 'Pilih peran / role pengguna.',
+            'gedung_id.exists' => 'Gedung / Asrama yang dipilih tidak valid.',
         ]);
 
         User::create([
@@ -56,6 +59,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'gedung_id' => ($validated['role'] === 'resepsionis') ? ($validated['gedung_id'] ?? null) : null,
         ]);
 
         return redirect()->route('admin.user.index')->with('success', 'Akun pengguna berhasil dibuat.');
@@ -63,7 +67,8 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return view('admin.user.edit', compact('user'));
+        $gedungs = \App\Models\Gedung::orderBy('nama_gedung', 'asc')->get();
+        return view('admin.user.edit', compact('user', 'gedungs'));
     }
 
     public function update(Request $request, User $user)
@@ -73,17 +78,20 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => ['nullable', 'string', Password::defaults()],
             'role' => 'required|in:admin,resepsionis,pimpinan',
+            'gedung_id' => 'nullable|exists:gedungs,id',
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Alamat email wajib diisi.',
             'email.unique' => 'Email ini sudah digunakan akun lain.',
             'role.required' => 'Pilih peran / role pengguna.',
+            'gedung_id.exists' => 'Gedung / Asrama yang dipilih tidak valid.',
         ]);
 
         $userData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
+            'gedung_id' => ($validated['role'] === 'resepsionis') ? ($validated['gedung_id'] ?? null) : null,
         ];
 
         if (!empty($validated['password'])) {
