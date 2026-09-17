@@ -110,6 +110,10 @@
                                             <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200" title="Penugasan Asrama">
                                                 🏢 {{ $user->gedung->nama_gedung }}
                                             </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100" title="Penugasan Asrama">
+                                                🌐 Semua Asrama
+                                            </span>
                                         @endif
                                     </div>
                                 @elseif($user->role === 'pimpinan')

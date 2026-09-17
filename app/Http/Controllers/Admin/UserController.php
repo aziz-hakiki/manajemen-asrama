@@ -59,7 +59,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
-            'gedung_id' => ($validated['role'] === 'resepsionis') ? ($validated['gedung_id'] ?? null) : null,
+            'gedung_id' => ($validated['role'] === 'resepsionis' && !empty($validated['gedung_id'])) ? $validated['gedung_id'] : null,
         ]);
 
         return redirect()->route('admin.user.index')->with('success', 'Akun pengguna berhasil dibuat.');
@@ -91,7 +91,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
-            'gedung_id' => ($validated['role'] === 'resepsionis') ? ($validated['gedung_id'] ?? null) : null,
+            'gedung_id' => ($validated['role'] === 'resepsionis' && !empty($validated['gedung_id'])) ? $validated['gedung_id'] : null,
         ];
 
         if (!empty($validated['password'])) {
