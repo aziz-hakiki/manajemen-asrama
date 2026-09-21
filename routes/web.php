@@ -23,10 +23,14 @@ use App\Http\Controllers\Resepsionis\CheckOutController;
 use App\Http\Controllers\Resepsionis\KamarKosongController;
 use App\Http\Controllers\Resepsionis\PenghuniAktifController;
 use App\Http\Controllers\Resepsionis\PesertaController as ResepsionisPesertaController;
+use App\Http\Controllers\SecurityController;
 
 Route::get('/', function () {
     return view('auth.login');
 });
+
+// Halaman Monitoring Pos Keamanan / Satpam (Akses Publik Tanpa Login)
+Route::get('/security', [SecurityController::class, 'index'])->name('security.index');
 
 Route::get('/dashboard', function () {
     $role = auth()->user()->role;
