@@ -13,6 +13,47 @@
 
     <x-alert />
 
+    @php
+        if (request()->routeIs('admin.*')) {
+            $targetRoute = 'admin.kamar-kosong.index';
+        } elseif (request()->routeIs('pimpinan.*')) {
+            $targetRoute = 'pimpinan.kamar-kosong.index';
+        } else {
+            $targetRoute = 'resepsionis.kamar-kosong.index';
+        }
+        $userAssignedGedungId = (auth()->user()->role === 'resepsionis') ? auth()->user()->assignedGedungId() : null;
+    @endphp
+
+    <!-- Asrama / Gedung Selection Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+        @foreach($gedungs as $gedungItem)
+            @php
+                $isAllowed = is_null($userAssignedGedungId) || ($userAssignedGedungId == $gedungItem->id);
+                $isActiveGedung = ($selectedGedung && $selectedGedung->id == $gedungItem->id);
+            @endphp
+            @if($isAllowed)
+                <a 
+                    href="{{ route($targetRoute, ['gedung_id' => $gedungItem->id]) }}" 
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 {{ $isActiveGedung ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:text-indigo-600 hover:bg-slate-50 border border-slate-200' }}"
+                >
+                    <span class="w-2 h-2 rounded-full {{ $isActiveGedung ? 'bg-white' : 'bg-indigo-500' }}"></span>
+                    <span>{{ $gedungItem->nama_gedung }}</span>
+                </a>
+            @else
+                <div 
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-100 border border-slate-200/60 cursor-not-allowed opacity-60 shrink-0" 
+                    title="Akses dinonaktifkan (Anda tidak ditugaskan di {{ $gedungItem->nama_gedung }})"
+                >
+                    <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                    <span>{{ $gedungItem->nama_gedung }}</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Terkunci">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+            @endif
+        @endforeach
+    </div>
+
     <!-- Top Stats & Header -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -50,16 +91,6 @@
             </div>
         </div>
     </div>
-
-    @php
-        if (request()->routeIs('admin.*')) {
-            $targetRoute = 'admin.kamar-kosong.index';
-        } elseif (request()->routeIs('pimpinan.*')) {
-            $targetRoute = 'pimpinan.kamar-kosong.index';
-        } else {
-            $targetRoute = 'resepsionis.kamar-kosong.index';
-        }
-    @endphp
 
     <!-- Filter Bar Card -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4">
