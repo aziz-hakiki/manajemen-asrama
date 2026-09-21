@@ -117,6 +117,76 @@
         </div>
     </div>
 
+    <!-- Combo Chart: Tren Okupansi Kamar 12 Bulan -->
+    <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-5 border-b border-slate-100">
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">Tren Okupansi Kamar Asrama (Januari - Desember) {{ $selectedPeriode }} </h3>
+                        <p class="text-xs text-slate-500">Diagram kombinasi 12 bulan: Batang (kamar terpakai) dan Garis (tingkat persentase okupansi)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Periode & KPI Mini Badges -->
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="hidden sm:flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-xs">
+                    <span class="text-slate-500 font-medium">Rata-rata:</span>
+                    <span class="font-bold text-indigo-600">{{ $rataRataTerpakai }} Kamar/bln</span>
+                </div>
+                <div class="hidden sm:flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-xs">
+                    <span class="text-slate-500 font-medium">Bulan Puncak:</span>
+                    <span class="font-bold text-emerald-600">{{ $bulanPuncak }}</span>
+                </div>
+
+                <!-- Dropdown Periode Filter -->
+                <form method="GET" action="{{ route('pimpinan.dashboard') }}" class="flex items-center">
+                    <label for="periode-select" class="sr-only">Pilih Tahun</label>
+                    <select 
+                        id="periode-select"
+                        name="periode" 
+                        onchange="this.form.submit()" 
+                        class="text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg py-2 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-2xs transition-colors"
+                    >
+                        @foreach($availableYears as $year)
+                            <option value="{{ $year }}" {{ $selectedPeriode == (string)$year ? 'selected' : '' }}> Jan - Des {{ $year }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
+        </div>
+    
+        <!-- Legend & Indicators -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 pb-2 text-xs text-slate-600">
+            <div class="flex items-center gap-5">
+                <div class="flex items-center gap-2">
+                    <span class="w-3.5 h-3.5 rounded-xs bg-indigo-600 inline-block shadow-2xs"></span>
+                    <span class="font-semibold text-slate-700">Batang:</span>
+                    <span class="text-slate-600">Kamar Terpakai (Unit)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3.5 h-1 rounded-full bg-emerald-500 inline-block"></span>
+                    <span class="font-semibold text-slate-700">Garis:</span>
+                    <span class="text-slate-600">Tingkat Okupansi (%)</span>
+                </div>
+            </div>
+            <div class="text-[11px] text-slate-500">
+                Kapasitas Keseluruhan: <strong class="text-slate-800 font-bold">{{ $totalKamar }} Kamar</strong>
+            </div>
+        </div>
+
+        <!-- Chart Canvas Container -->
+        <div class="relative w-full h-72 sm:h-80 md:h-96 mt-2">
+            <canvas id="occupancyComboChart"></canvas>
+        </div>
+    </div>
+
     <!-- Secondary Grid: Status Per Gedung & Menu Laporan -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -245,4 +315,190 @@
             </div>
         </div>
     </div>
+
+    <!-- Chart.js CDN & Combo Chart Script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('occupancyComboChart');
+            if (!ctx || typeof Chart === 'undefined') return;
+
+            const chartLabels = {!! json_encode($chartLabels) !!};
+            const chartFullLabels = {!! json_encode($chartFullLabels) !!};
+            const dataKamarTerpakai = {!! json_encode($chartKamarTerpakai) !!};
+            const dataPersentase = {!! json_encode($chartPersentase) !!};
+            const dataTransaksi = {!! json_encode($chartTransaksi) !!};
+            const totalKamar = {{ (int) $totalKamar }};
+
+            new Chart(ctx, {
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Tingkat Okupansi (%)',
+                            data: dataPersentase,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            pointHoverBackgroundColor: '#059669',
+                            tension: 0.35,
+                            borderWidth: 3,
+                            yAxisID: 'y1',
+                            order: 1
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Kamar Terpakai (Unit)',
+                            data: dataKamarTerpakai,
+                            backgroundColor: 'rgba(79, 70, 229, 0.85)',
+                            hoverBackgroundColor: 'rgba(67, 56, 202, 1)',
+                            borderRadius: 6,
+                            borderSkipped: false,
+                            maxBarThickness: 40,
+                            yAxisID: 'y',
+                            order: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#f8fafc',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            boxPadding: 6,
+                            usePointStyle: true,
+                            titleFont: {
+                                size: 13,
+                                weight: '700'
+                            },
+                            bodyFont: {
+                                size: 12
+                            },
+                            footerFont: {
+                                size: 11,
+                                weight: '600'
+                            },
+                            footerColor: '#cbd5e1',
+                            callbacks: {
+                                title: function (tooltipItems) {
+                                    if (tooltipItems.length > 0) {
+                                        const index = tooltipItems[0].dataIndex;
+                                        return chartFullLabels[index] || chartLabels[index];
+                                    }
+                                    return '';
+                                },
+                                label: function (context) {
+                                    if (context.dataset.type === 'line') {
+                                        return ` Tingkat Okupansi: ${context.parsed.y}%`;
+                                    } else {
+                                        return ` Kamar Terpakai: ${context.parsed.y} dari ${totalKamar} Kamar`;
+                                    }
+                                },
+                                footer: function (tooltipItems) {
+                                    if (tooltipItems.length > 0) {
+                                        const index = tooltipItems[0].dataIndex;
+                                        const transaksi = dataTransaksi[index] || 0;
+                                        return `Total Check-in/Tamu: ${transaksi} Orang`;
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                font: {
+                                    size: 11,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Jumlah Kamar Terpakai (Unit)',
+                                color: '#4f46e5',
+                                font: {
+                                    weight: '600',
+                                    size: 11
+                                }
+                            },
+                            min: 0,
+                            suggestedMax: Math.max(totalKamar, 5),
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0,
+                                color: '#64748b',
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(241, 245, 249, 1)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Tingkat Okupansi (%)',
+                                color: '#10b981',
+                                font: {
+                                    weight: '600',
+                                    size: 11
+                                }
+                            },
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20,
+                                callback: function (value) {
+                                    return value + '%';
+                                },
+                                color: '#64748b',
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </x-app-layout>

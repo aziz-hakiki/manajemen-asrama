@@ -8,12 +8,13 @@ use App\Models\Gedung;
 use App\Models\Kamar;
 use App\Models\Peserta;
 use App\Models\TransaksiAsrama;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LaporanController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $totalKamar = Kamar::count();
         $kamarKosong = Kamar::where('status', '!=', 'rusak')->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0')->count();
@@ -36,6 +37,57 @@ class LaporanController extends Controller
             ->take(5)
             ->get();
 
+        // Periode Tahun untuk Diagram Kombinasi 12 Bulan (Januari - Desember)
+        $availableYears = range(2026, 2030);
+        $currentYear = now()->year;
+        $defaultYear = in_array($currentYear, $availableYears) ? $currentYear : 2026;
+        $selectedPeriode = $request->get('periode', (string) $defaultYear);
+        if (!in_array((int) $selectedPeriode, $availableYears)) {
+            $selectedPeriode = (string) $defaultYear;
+        }
+        $year = (int) $selectedPeriode;
+
+        $chartLabels = [];
+        $chartFullLabels = [];
+        $chartKamarTerpakai = [];
+        $chartPersentase = [];
+        $chartTransaksi = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $dt = Carbon::createFromDate($year, $month, 1);
+            $startOfMonth = $dt->copy()->startOfMonth();
+            $endOfMonth = $dt->copy()->endOfMonth();
+
+            $terpakai = TransaksiAsrama::where('tanggal_masuk', '<=', $endOfMonth)
+                ->where(function ($q) use ($startOfMonth) {
+                    $q->whereNull('tanggal_keluar')->orWhere('tanggal_keluar', '>=', $startOfMonth);
+                })
+                ->distinct('kamar_id')
+                ->count('kamar_id');
+
+            $transaksiCount = TransaksiAsrama::where('tanggal_masuk', '<=', $endOfMonth)
+                ->where(function ($q) use ($startOfMonth) {
+                    $q->whereNull('tanggal_keluar')->orWhere('tanggal_keluar', '>=', $startOfMonth);
+                })
+                ->count();
+
+            $rate = $totalKamar > 0 ? round(($terpakai / $totalKamar) * 100, 1) : 0;
+
+            $chartLabels[] = $dt->translatedFormat('F');
+            $chartFullLabels[] = $dt->translatedFormat('F Y');
+            $chartKamarTerpakai[] = $terpakai;
+            $chartPersentase[] = $rate;
+            $chartTransaksi[] = $transaksiCount;
+        }
+
+        $monthsToConsider = ($year === $currentYear) ? min(12, max(1, (int) now()->month)) : 12;
+        $terpakaiSlice = array_slice($chartKamarTerpakai, 0, $monthsToConsider);
+        $rataRataTerpakai = count($terpakaiSlice) > 0 ? round(array_sum($terpakaiSlice) / count($terpakaiSlice), 1) : 0;
+
+        $maxTerpakai = count($chartKamarTerpakai) > 0 ? max($chartKamarTerpakai) : 0;
+        $maxIndex = array_search($maxTerpakai, $chartKamarTerpakai);
+        $bulanPuncak = ($maxTerpakai > 0 && $maxIndex !== false) ? $chartFullLabels[$maxIndex] : '-';
+
         return view('pimpinan.dashboard', compact(
             'totalKamar',
             'kamarKosong',
@@ -45,7 +97,16 @@ class LaporanController extends Controller
             'totalPeserta',
             'tingkatHunian',
             'gedungs',
-            'transaksiTerbaru'
+            'transaksiTerbaru',
+            'chartLabels',
+            'chartFullLabels',
+            'chartKamarTerpakai',
+            'chartPersentase',
+            'chartTransaksi',
+            'selectedPeriode',
+            'availableYears',
+            'rataRataTerpakai',
+            'bulanPuncak'
         ));
     }
 
