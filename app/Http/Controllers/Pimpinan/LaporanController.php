@@ -30,7 +30,7 @@ class LaporanController extends Controller
               ->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") = 0');
         }, 'kamars as kamars_terisi_count' => function ($q) {
             $q->whereRaw('(SELECT COUNT(*) FROM transaksi_asramas WHERE transaksi_asramas.kamar_id = kamars.id AND transaksi_asramas.status = "menginap") > 0');
-        }])->get();
+        }])->orderBy('nama_gedung')->get();
 
         $transaksiTerbaru = TransaksiAsrama::with(['peserta.diklat', 'kamar.gedung'])
             ->latest('tanggal_masuk')
@@ -47,30 +47,54 @@ class LaporanController extends Controller
         }
         $year = (int) $selectedPeriode;
 
+        $palette = [
+            ['bg' => 'rgba(79, 70, 229, 0.85)', 'hover' => 'rgba(67, 56, 202, 1)', 'border' => '#4f46e5'], // Indigo
+            ['bg' => 'rgba(245, 158, 11, 0.85)', 'hover' => 'rgba(217, 119, 6, 1)', 'border' => '#d97706'], // Amber
+            ['bg' => 'rgba(6, 182, 212, 0.85)', 'hover' => 'rgba(8, 145, 178, 1)', 'border' => '#0891b2'],  // Cyan
+            ['bg' => 'rgba(244, 63, 94, 0.85)', 'hover' => 'rgba(225, 29, 72, 1)', 'border' => '#e11d48'],  // Rose
+            ['bg' => 'rgba(139, 92, 246, 0.85)', 'hover' => 'rgba(124, 58, 237, 1)', 'border' => '#7c3aed'], // Violet
+            ['bg' => 'rgba(249, 115, 22, 0.85)', 'hover' => 'rgba(234, 88, 12, 1)', 'border' => '#ea580c'], // Orange
+            ['bg' => 'rgba(20, 184, 166, 0.85)', 'hover' => 'rgba(13, 148, 136, 1)', 'border' => '#0d9488'], // Teal
+            ['bg' => 'rgba(59, 130, 246, 0.85)', 'hover' => 'rgba(37, 99, 235, 1)', 'border' => '#2563eb'], // Blue
+        ];
+
+        // Mapping Kamar ke Gedung & ambil transaksi yang bersinggungan dengan tahun terpilih
+        $kamarGedungMap = Kamar::pluck('gedung_id', 'id')->all();
+        $startOfYear = Carbon::createFromDate($year, 1, 1)->startOfDay();
+        $endOfYear = Carbon::createFromDate($year, 12, 31)->endOfDay();
+
+        $transaksiTahun = TransaksiAsrama::where('tanggal_masuk', '<=', $endOfYear)
+            ->where(function ($q) use ($startOfYear) {
+                $q->whereNull('tanggal_keluar')->orWhere('tanggal_keluar', '>=', $startOfYear);
+            })
+            ->get(['id', 'kamar_id', 'tanggal_masuk', 'tanggal_keluar', 'status']);
+
         $chartLabels = [];
         $chartFullLabels = [];
         $chartKamarTerpakai = [];
         $chartPersentase = [];
         $chartTransaksi = [];
 
+        // Inisialisasi hitungan per gedung
+        $monthlyGedungCounts = [];
+        foreach ($gedungs as $gedung) {
+            $monthlyGedungCounts[$gedung->id] = [];
+        }
+
         for ($month = 1; $month <= 12; $month++) {
             $dt = Carbon::createFromDate($year, $month, 1);
             $startOfMonth = $dt->copy()->startOfMonth();
             $endOfMonth = $dt->copy()->endOfMonth();
 
-            $terpakai = TransaksiAsrama::where('tanggal_masuk', '<=', $endOfMonth)
-                ->where(function ($q) use ($startOfMonth) {
-                    $q->whereNull('tanggal_keluar')->orWhere('tanggal_keluar', '>=', $startOfMonth);
-                })
-                ->distinct('kamar_id')
-                ->count('kamar_id');
+            // Transaksi aktif pada bulan ini
+            $inMonth = $transaksiTahun->filter(function ($t) use ($startOfMonth, $endOfMonth) {
+                $in = Carbon::parse($t->tanggal_masuk);
+                $out = $t->tanggal_keluar ? Carbon::parse($t->tanggal_keluar) : null;
+                return $in->lte($endOfMonth) && (!$out || $out->gte($startOfMonth));
+            });
 
-            $transaksiCount = TransaksiAsrama::where('tanggal_masuk', '<=', $endOfMonth)
-                ->where(function ($q) use ($startOfMonth) {
-                    $q->whereNull('tanggal_keluar')->orWhere('tanggal_keluar', '>=', $startOfMonth);
-                })
-                ->count();
-
+            $terpakai = $inMonth->pluck('kamar_id')->unique()->count();
+            $transaksiCount = $inMonth->count();
             $rate = $totalKamar > 0 ? round(($terpakai / $totalKamar) * 100, 1) : 0;
 
             $chartLabels[] = $dt->translatedFormat('F');
@@ -78,6 +102,36 @@ class LaporanController extends Controller
             $chartKamarTerpakai[] = $terpakai;
             $chartPersentase[] = $rate;
             $chartTransaksi[] = $transaksiCount;
+
+            // Hitung kamar unik terpakai untuk masing-masing gedung di bulan ini
+            foreach ($gedungs as $gedung) {
+                $terpakaiGedung = $inMonth->filter(function ($t) use ($kamarGedungMap, $gedung) {
+                    return ($kamarGedungMap[$t->kamar_id] ?? null) === $gedung->id;
+                })->pluck('kamar_id')->unique()->count();
+
+                $monthlyGedungCounts[$gedung->id][] = $terpakaiGedung;
+            }
+        }
+
+        // Susun dataset Chart.js untuk setiap asrama/gedung
+        $chartGedungDatasets = [];
+        $maxKamarPerGedung = 0;
+        foreach ($gedungs as $index => $gedung) {
+            $color = $palette[$index % count($palette)];
+            $gedungKamarCount = $gedung->kamars_count ?? 0;
+            if ($gedungKamarCount > $maxKamarPerGedung) {
+                $maxKamarPerGedung = $gedungKamarCount;
+            }
+
+            $chartGedungDatasets[] = [
+                'id' => $gedung->id,
+                'label' => $gedung->nama_gedung,
+                'total_kamar' => $gedungKamarCount,
+                'data' => $monthlyGedungCounts[$gedung->id],
+                'backgroundColor' => $color['bg'],
+                'hoverBackgroundColor' => $color['hover'],
+                'borderColor' => $color['border'],
+            ];
         }
 
         $monthsToConsider = ($year === $currentYear) ? min(12, max(1, (int) now()->month)) : 12;
@@ -103,6 +157,8 @@ class LaporanController extends Controller
             'chartKamarTerpakai',
             'chartPersentase',
             'chartTransaksi',
+            'chartGedungDatasets',
+            'maxKamarPerGedung',
             'selectedPeriode',
             'availableYears',
             'rataRataTerpakai',

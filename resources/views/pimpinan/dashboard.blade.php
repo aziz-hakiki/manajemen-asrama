@@ -129,7 +129,7 @@
                     </div>
                     <div>
                         <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">Tren Okupansi Kamar Asrama (Januari - Desember) {{ $selectedPeriode }} </h3>
-                        <p class="text-xs text-slate-500">Diagram kombinasi 12 bulan: Batang (kamar terpakai) dan Garis (tingkat persentase okupansi)</p>
+                        <p class="text-xs text-slate-500">Diagram perbandingan 12 bulan: Batang (kamar terpakai per asrama) dan Garis (tingkat okupansi total)</p>
                     </div>
                 </div>
             </div>
@@ -164,16 +164,26 @@
     
         <!-- Legend & Indicators -->
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 pb-2 text-xs text-slate-600">
-            <div class="flex items-center gap-5">
-                <div class="flex items-center gap-2">
-                    <span class="w-3.5 h-3.5 rounded-xs bg-indigo-600 inline-block shadow-2xs"></span>
-                    <span class="font-semibold text-slate-700">Batang:</span>
-                    <span class="text-slate-600">Kamar Terpakai (Unit)</span>
-                </div>
-                <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-3 sm:gap-4">
+                @if(isset($chartGedungDatasets) && count($chartGedungDatasets) > 0)
+                    @foreach($chartGedungDatasets as $ds)
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-xs inline-block shadow-2xs" style="background-color: {{ $ds['backgroundColor'] }}; border: 1px solid {{ $ds['borderColor'] }};"></span>
+                            <span class="font-semibold text-slate-700">{{ $ds['label'] }}</span>
+                            <span class="text-[10px] text-slate-400">({{ $ds['total_kamar'] }} kmr)</span>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 rounded-xs bg-indigo-600 inline-block shadow-2xs"></span>
+                        <span class="font-semibold text-slate-700">Batang:</span>
+                        <span class="text-slate-600">Kamar Terpakai (Unit)</span>
+                    </div>
+                @endif
+                <div class="flex items-center gap-1.5 border-l border-slate-200 pl-3">
                     <span class="w-3.5 h-1 rounded-full bg-emerald-500 inline-block"></span>
                     <span class="font-semibold text-slate-700">Garis:</span>
-                    <span class="text-slate-600">Tingkat Okupansi (%)</span>
+                    <span class="text-slate-600">Okupansi Total (%)</span>
                 </div>
             </div>
             <div class="text-[11px] text-slate-500">
@@ -325,45 +335,72 @@
 
             const chartLabels = {!! json_encode($chartLabels) !!};
             const chartFullLabels = {!! json_encode($chartFullLabels) !!};
-            const dataKamarTerpakai = {!! json_encode($chartKamarTerpakai) !!};
+            const chartGedungDatasets = {!! json_encode($chartGedungDatasets ?? []) !!};
             const dataPersentase = {!! json_encode($chartPersentase) !!};
             const dataTransaksi = {!! json_encode($chartTransaksi) !!};
             const totalKamar = {{ (int) $totalKamar }};
+            const maxKamarPerGedung = {{ (int) ($maxKamarPerGedung ?? 5) }};
+
+            // Dataset Line Okupansi Keseluruhan
+            const datasets = [
+                {
+                    type: 'line',
+                    label: 'Okupansi Total (%)',
+                    data: dataPersentase,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                    pointBackgroundColor: '#10b981',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: '#059669',
+                    tension: 0.35,
+                    borderWidth: 3,
+                    yAxisID: 'y1',
+                    order: 1
+                }
+            ];
+
+            // Masukkan dataset bar per masing-masing asrama
+            if (chartGedungDatasets && chartGedungDatasets.length > 0) {
+                chartGedungDatasets.forEach((gedung, idx) => {
+                    datasets.push({
+                        type: 'bar',
+                        label: gedung.label,
+                        totalKamarGedung: gedung.total_kamar,
+                        data: gedung.data,
+                        backgroundColor: gedung.backgroundColor,
+                        hoverBackgroundColor: gedung.hoverBackgroundColor,
+                        borderColor: gedung.borderColor,
+                        borderRadius: 4,
+                        borderSkipped: false,
+                        maxBarThickness: 28,
+                        yAxisID: 'y',
+                        order: 2 + idx
+                    });
+                });
+            } else {
+                const dataKamarTerpakai = {!! json_encode($chartKamarTerpakai ?? []) !!};
+                datasets.push({
+                    type: 'bar',
+                    label: 'Kamar Terpakai (Unit)',
+                    totalKamarGedung: totalKamar,
+                    data: dataKamarTerpakai,
+                    backgroundColor: 'rgba(79, 70, 229, 0.85)',
+                    hoverBackgroundColor: 'rgba(67, 56, 202, 1)',
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    maxBarThickness: 40,
+                    yAxisID: 'y',
+                    order: 2
+                });
+            }
 
             new Chart(ctx, {
                 data: {
                     labels: chartLabels,
-                    datasets: [
-                        {
-                            type: 'line',
-                            label: 'Tingkat Okupansi (%)',
-                            data: dataPersentase,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.08)',
-                            pointBackgroundColor: '#10b981',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 7,
-                            pointHoverBackgroundColor: '#059669',
-                            tension: 0.35,
-                            borderWidth: 3,
-                            yAxisID: 'y1',
-                            order: 1
-                        },
-                        {
-                            type: 'bar',
-                            label: 'Kamar Terpakai (Unit)',
-                            data: dataKamarTerpakai,
-                            backgroundColor: 'rgba(79, 70, 229, 0.85)',
-                            hoverBackgroundColor: 'rgba(67, 56, 202, 1)',
-                            borderRadius: 6,
-                            borderSkipped: false,
-                            maxBarThickness: 40,
-                            yAxisID: 'y',
-                            order: 2
-                        }
-                    ]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
@@ -378,7 +415,21 @@
                     },
                     plugins: {
                         legend: {
-                            display: false
+                            display: true,
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                padding: 12,
+                                color: '#475569',
+                                font: {
+                                    size: 11,
+                                    weight: '600'
+                                }
+                            }
                         },
                         tooltip: {
                             backgroundColor: 'rgba(15, 23, 42, 0.95)',
@@ -411,9 +462,14 @@
                                 },
                                 label: function (context) {
                                     if (context.dataset.type === 'line') {
-                                        return ` Tingkat Okupansi: ${context.parsed.y}%`;
+                                        return ` ${context.dataset.label}: ${context.parsed.y}%`;
                                     } else {
-                                        return ` Kamar Terpakai: ${context.parsed.y} dari ${totalKamar} Kamar`;
+                                        const totalKamarG = context.dataset.totalKamarGedung;
+                                        if (totalKamarG > 0) {
+                                            const pct = Math.round((context.parsed.y / totalKamarG) * 100);
+                                            return ` ${context.dataset.label}: ${context.parsed.y} / ${totalKamarG} Kamar (${pct}%)`;
+                                        }
+                                        return ` ${context.dataset.label}: ${context.parsed.y} Kamar Terpakai`;
                                     }
                                 },
                                 footer: function (tooltipItems) {
@@ -446,7 +502,7 @@
                             position: 'left',
                             title: {
                                 display: true,
-                                text: 'Jumlah Kamar Terpakai (Unit)',
+                                text: 'Terpakai per Asrama (Unit)',
                                 color: '#4f46e5',
                                 font: {
                                     weight: '600',
@@ -454,7 +510,7 @@
                                 }
                             },
                             min: 0,
-                            suggestedMax: Math.max(totalKamar, 5),
+                            suggestedMax: Math.max(maxKamarPerGedung + 1, 5),
                             ticks: {
                                 stepSize: 1,
                                 precision: 0,
@@ -473,7 +529,7 @@
                             position: 'right',
                             title: {
                                 display: true,
-                                text: 'Tingkat Okupansi (%)',
+                                text: 'Okupansi Total (%)',
                                 color: '#10b981',
                                 font: {
                                     weight: '600',

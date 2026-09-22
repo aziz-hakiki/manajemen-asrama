@@ -164,7 +164,7 @@
                                                     x-text="item.nip"
                                                 ></span>
                                                 <span 
-                                                    :class="item.keterangan === 'Narasumber' ? 'bg-amber-50 text-amber-700 border-amber-200/80' : 'bg-indigo-50 text-indigo-700 border-indigo-200/80'"
+                                                    :class="item.keterangan === 'Narasumber' ? 'bg-amber-50 text-amber-700 border-amber-200/80' : (item.keterangan === 'Panitia' ? 'bg-purple-50 text-purple-700 border-purple-200/80' : 'bg-indigo-50 text-indigo-700 border-indigo-200/80')"
                                                     class="text-[10px] px-2 py-0.5 rounded-full font-medium border"
                                                     x-text="item.keterangan || 'Peserta'"
                                                 ></span>
@@ -240,7 +240,7 @@
                                             <span class="text-xs font-bold text-emerald-950" x-text="selectedItem.nama"></span>
                                             <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded">Terpilih</span>
                                             <span 
-                                                :class="selectedItem.keterangan === 'Narasumber' ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'"
+                                                :class="selectedItem.keterangan === 'Narasumber' ? 'bg-amber-100 text-amber-800' : (selectedItem.keterangan === 'Panitia' ? 'bg-purple-100 text-purple-800' : 'bg-indigo-100 text-indigo-800')"
                                                 class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                                                 x-text="selectedItem.keterangan || 'Peserta'"
                                             ></span>

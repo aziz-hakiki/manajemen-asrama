@@ -234,7 +234,7 @@ Untuk mempercepat input data peserta dalam jumlah banyak (puluhan hingga ratusan
    - Kolom B: `Jenis Kelamin` *(Laki-laki / Perempuan atau L / P)*
    - Kolom C: `NIP / NIK` *(Hanya angka)*
    - Kolom D: `Instansi` *(Asal kantor/instansi)*
-   - Kolom E: `Keterangan` *(Peserta / Narasumber)*
+   - Kolom E: `Keterangan` *(Peserta / Panitia / Narasumber)*
 4. Simpan file dalam format `.csv`.
 5. Kembali ke aplikasi, pilih program diklat tujuan (jika diperlukan) dan klik **Pilih File Excel**.
 6. Klik tombol **Unggah & Proses Import Data**.

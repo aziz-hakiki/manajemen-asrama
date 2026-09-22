@@ -21,6 +21,10 @@ class PesertaController extends Controller
             $query->where('diklat_id', $request->diklat_id);
         }
 
+        if ($request->filled('keterangan')) {
+            $query->where('keterangan', $request->keterangan);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -160,7 +164,7 @@ class PesertaController extends Controller
             // Contoh baris 1
             fputcsv($file, ['Ahmad Hidayat, S.Kom', 'Laki-laki', '198901012015011001', 'BPSDM Prov. Jabar', 'Peserta']);
             // Contoh baris 2
-            fputcsv($file, ['Siti Rahmawati, S.STP', 'Perempuan', '199203152018022002', 'Dinas Perhubungan', 'Peserta']);
+            fputcsv($file, ['Siti Rahmawati, S.STP', 'Perempuan', '199203152018022002', 'Dinas Perhubungan', 'Panitia']);
             // Contoh baris 3
             fputcsv($file, ['Dr. Bambang Suryono', 'Laki-laki', '197508201998031005', 'Badan Kepegawaian Daerah', 'Narasumber']);
             fclose($file);
@@ -278,12 +282,14 @@ class PesertaController extends Controller
             // Parse Instansi
             $instansi = ($instansiIndex !== -1 && isset($row[$instansiIndex])) ? trim($row[$instansiIndex]) : null;
 
-            // Parse Keterangan (Peserta / Narasumber)
+            // Parse Keterangan (Peserta / Panitia / Narasumber)
             $keterangan = 'Peserta';
             if ($keteranganIndex !== -1 && isset($row[$keteranganIndex])) {
                 $valKet = strtolower(trim($row[$keteranganIndex]));
                 if (str_contains($valKet, 'narasumber') || str_contains($valKet, 'pemateri') || str_contains($valKet, 'tutor') || str_contains($valKet, 'pengajar')) {
                     $keterangan = 'Narasumber';
+                } elseif (str_contains($valKet, 'panitia') || str_contains($valKet, 'penyelenggara') || str_contains($valKet, 'organizer')) {
+                    $keterangan = 'Panitia';
                 }
             }
 

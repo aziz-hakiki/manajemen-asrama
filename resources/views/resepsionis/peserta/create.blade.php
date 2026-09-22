@@ -91,6 +91,7 @@
                             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition-all"
                         >
                             <option value="Peserta" {{ old('keterangan', 'Peserta') == 'Peserta' ? 'selected' : '' }}>Peserta</option>
+                            <option value="Panitia" {{ old('keterangan') == 'Panitia' ? 'selected' : '' }}>Panitia</option>
                             <option value="Narasumber" {{ old('keterangan') == 'Narasumber' ? 'selected' : '' }}>Narasumber</option>
                         </select>
                         @error('keterangan')

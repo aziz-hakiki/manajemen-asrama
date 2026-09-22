@@ -136,6 +136,10 @@
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">
                                         Narasumber
                                     </span>
+                                @elseif(($transaksi->peserta->keterangan ?? '') === 'Panitia')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200/80">
+                                        Panitia
+                                    </span>
                                 @else
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/80">
                                         {{ $transaksi->peserta->keterangan ?: 'Peserta' }}

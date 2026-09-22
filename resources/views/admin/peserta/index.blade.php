@@ -32,7 +32,7 @@
 
     <!-- Filter Bar Card -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4">
-        <form method="GET" action="{{ route('admin.peserta.index') }}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form method="GET" action="{{ route('admin.peserta.index') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <!-- Search -->
             <div>
                 <input 
@@ -56,12 +56,22 @@
                 </select>
             </div>
 
+            <!-- Filter Keterangan -->
+            <div>
+                <select name="keterangan" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-xs transition-all">
+                    <option value="">Semua Keterangan</option>
+                    <option value="Peserta" {{ request('keterangan') == 'Peserta' ? 'selected' : '' }}>Peserta</option>
+                    <option value="Panitia" {{ request('keterangan') == 'Panitia' ? 'selected' : '' }}>Panitia</option>
+                    <option value="Narasumber" {{ request('keterangan') == 'Narasumber' ? 'selected' : '' }}>Narasumber</option>
+                </select>
+            </div>
+
             <!-- Action Buttons -->
             <div class="flex items-center gap-2">
                 <button type="submit" class="w-full px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition-colors">
                     Filter
                 </button>
-                @if(request()->hasAny(['search', 'diklat_id']))
+                @if(request()->hasAny(['search', 'diklat_id', 'keterangan']))
                     <a href="{{ route('admin.peserta.index') }}" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold transition-colors" title="Reset Filter">
                         Reset
                     </a>
@@ -125,6 +135,10 @@
                                 @if($peserta->keterangan === 'Narasumber')
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
                                         Narasumber
+                                    </span>
+                                @elseif($peserta->keterangan === 'Panitia')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200/60">
+                                        Panitia
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/60">

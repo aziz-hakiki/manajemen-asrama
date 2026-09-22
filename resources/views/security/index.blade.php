@@ -114,7 +114,6 @@
                     <span class="text-indigo-600 font-semibold">{{ $today->translatedFormat('d M Y') }}</span>
                 </div>
             </div>
-
             <!-- KPI 2: Total Peserta Diklat Aktif -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs relative overflow-hidden group">
                 <div class="absolute right-3 -bottom-3 opacity-5 group-hover:opacity-10 transition-opacity">
