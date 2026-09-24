@@ -59,7 +59,7 @@ Sistem menerapkan kontrol akses berbasis peran (*Role-Based Access Control*) den
 | No | Peran Pengguna (*Role*) | Deskripsi Tanggung Jawab Utama | Menu Utama yang Dapat Diakses |
 |:---|:---|:---|:---|
 | 1 | **Administrator (Admin)** | Mengelola data master sistem, fasilitas gedung & kamar, agenda diklat, import massal peserta, manajemen akun pengguna, serta rekapitulasi laporan. | Dashboard, Gedung, Kamar, Diklat, Peserta, Import Excel, Pengguna, Laporan. |
-| 2 | **Resepsionis** | Melayani operasional harian meja depan (*front office*), proses check-in tamu, check-out tamu, monitoring ketersediaan kamar, dan monitoring penghuni aktif. | Dashboard, Check-in, Check-out, Ketersediaan Kamar, Penghuni Aktif, Tambah Peserta. |
+| 2 | **Resepsionis** | Melayani operasional harian meja depan (*front office*), proses check-in tamu, check-out tamu, pemesanan kamar (*booking* denah bioskop), monitoring ketersediaan kamar, dan monitoring penghuni aktif. | Dashboard, Check-in, Check-out, Booking, Ketersediaan Kamar, Penghuni Aktif, Tambah Peserta. |
 | 3 | **Pimpinan** | Memantau kinerja fasilitas asrama, persentase tingkat keterisian hunian (*occupancy rate*), laporan per gedung, per diklat, serta export data. | Dashboard Eksekutif, Laporan Hunian, Laporan Per Gedung, Laporan Per Diklat. |
 
 ---
@@ -338,7 +338,36 @@ Jika terdapat peserta tambahan atau peserta yang belum terdaftar di data panitia
 
 ---
 
-### 4.4 Prosedur Layanan Check-out & Pelepasan Status Kamar Bertingkat (`/resepsionis/checkout`)
+### 4.4 Prosedur Booking Kamar Berbasis Denah Kursi Bioskop (`/resepsionis/booking`)
+Fitur ini mengadopsi konsep visual **pemilihan kursi tiket bioskop (*Cinema Seat Selection Card*)**, di mana seluruh kamar dalam satu asrama/gedung (misalnya 50 kamar di Asrama A) ditampilkan dalam satu kartu denah interaktif.
+
+#### A. Kode Warna Kotak Kamar:
+- 🟩 **Hijau (Kosong / Siap Dibooking)**: Kamar kosong dan siap untuk direservasi atau ditempati.
+- 🟥 **Merah (Terisi)**: Kamar sedang dihuni aktif oleh peserta diklat.
+- 🟪 **Violet / Ungu (Booked)**: Kamar telah direservasi/dipesan untuk tanggal yang dipilih.
+- ⬜ **Abu-abu (Rusak)**: Kamar sedang dalam perbaikan fasilitas dan tidak dapat digunakan.
+
+#### B. Filter & Penyesuaian Tanggal:
+- Resepsionis dapat memilih tanggal tertentu melalui kalender atau tombol cepat (*Hari Ini*, *Besok*, *Lusa*).
+- Status warna seluruh kotak kamar akan berubah secara dinamis sesuai kondisi ketersediaan pada tanggal tersebut.
+
+#### C. Langkah-langkah Melakukan Booking:
+1. Klik menu **Booking** pada sidebar resepsionis.
+2. Pilih tab gedung/asrama yang diinginkan.
+3. Tentukan tanggal reservasi.
+4. Klik kotak kamar yang berwarna **Hijau**.
+5. Formulir modal pemesanan akan terbuka otomatis dengan nomor kamar terpilih.
+6. Lengkapi nama pemesan, instansi, kontak HP, pilihan diklat/kegiatan, serta rentang tanggal check-in & check-out.
+7. Klik **Konfirmasi Booking**. Warna kamar pada periode tersebut otomatis berubah menjadi **Violet**.
+
+#### D. Aksi Cepat pada Kamar Booked (Violet):
+- Klik kotak kamar berwarna **Violet** untuk melihat rincian pemesan.
+- Klik **Check-in Sekarang** untuk langsung mengonversi reservasi menjadi tamu aktif menginap tanpa perlu mengisi ulang data.
+- Klik **Batalkan Booking** jika reservasi dibatalkan oleh tamu.
+
+---
+
+### 4.5 Prosedur Layanan Check-out & Pelepasan Status Kamar Bertingkat (`/resepsionis/checkout`)
 Prosedur ini dilakukan saat agenda diklat selesai dan peserta mengembalikan kunci kamar sebelum meninggalkan asrama.
 
 ```

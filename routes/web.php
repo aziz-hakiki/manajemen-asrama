@@ -20,6 +20,7 @@ use App\Http\Controllers\Pimpinan\LaporanController;
 // Resepsionis Controllers
 use App\Http\Controllers\Resepsionis\CheckInController;
 use App\Http\Controllers\Resepsionis\CheckOutController;
+use App\Http\Controllers\Resepsionis\BookingController;
 use App\Http\Controllers\Resepsionis\KamarKosongController;
 use App\Http\Controllers\Resepsionis\PenghuniAktifController;
 use App\Http\Controllers\Resepsionis\PesertaController as ResepsionisPesertaController;
@@ -139,6 +140,15 @@ Route::middleware(['auth', 'role:resepsionis'])->prefix('resepsionis')->name('re
     Route::post('checkout/{transaksi}', [CheckOutController::class, 'process'])->name('checkout.process');
     Route::get('checkout/{transaksi}/pindah-kamar', [CheckOutController::class, 'editPindahKamar'])->name('checkout.pindah-kamar.edit');
     Route::match(['post', 'put'], 'checkout/{transaksi}/pindah-kamar', [CheckOutController::class, 'pindahKamar'])->name('checkout.pindah-kamar');
+
+    // Booking Kamar (Denah Bioskop)
+    Route::get('booking', [BookingController::class, 'index'])->name('booking.index');
+    Route::post('booking', [BookingController::class, 'store'])->name('booking.store');
+    Route::post('booking/batch', [BookingController::class, 'storeBatch'])->name('booking.batch');
+    Route::post('booking/{booking}/checkin', [BookingController::class, 'checkIn'])->name('booking.checkin');
+    Route::post('booking/{booking}/cancel', [BookingController::class, 'cancel'])->name('booking.cancel');
+    Route::delete('booking/{booking}', [BookingController::class, 'destroy'])->name('booking.destroy');
+    Route::delete('booking/transaksi/{transaksi}', [BookingController::class, 'destroyTransaksi'])->name('booking.transaksi.destroy');
 
     // Kamar Kosong
     Route::get('kamar-kosong', [KamarKosongController::class, 'index'])->name('kamar-kosong.index');

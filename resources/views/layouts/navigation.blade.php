@@ -127,6 +127,13 @@
                         <span>Check-out</span>
                     </x-sidebar-link>
 
+                    <x-sidebar-link :href="route('resepsionis.booking.index')" :active="request()->routeIs('resepsionis.booking.*')">
+                        <svg class="w-5 h-5 text-slate-500 {{ request()->routeIs('resepsionis.booking.*') ? 'text-indigo-600' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                        </svg>
+                        <span>Booking</span>
+                    </x-sidebar-link>
+
                     <x-sidebar-link :href="route('resepsionis.kamar-kosong.index')" :active="request()->routeIs('resepsionis.kamar-kosong.*')">
                         <svg class="w-5 h-5 text-slate-500 {{ request()->routeIs('resepsionis.kamar-kosong.*') ? 'text-indigo-600' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />

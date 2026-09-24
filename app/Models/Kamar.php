@@ -28,6 +28,16 @@ class Kamar extends Model
         return $this->hasMany(TransaksiAsrama::class)->where('status', 'menginap');
     }
 
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function activeBookings(): HasMany
+    {
+        return $this->hasMany(Booking::class)->where('status', 'booked');
+    }
+
     public function getTerisiCountAttribute(): int
     {
         if (isset($this->attributes['terisi_count'])) {

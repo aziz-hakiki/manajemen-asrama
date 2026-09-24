@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Resepsionis;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Gedung;
 use App\Models\Kamar;
 use App\Models\Peserta;
@@ -123,6 +124,16 @@ class CheckInController extends Controller
                 'tanggal_masuk' => $validated['tanggal_masuk'],
                 'status' => 'menginap',
             ]);
+
+            // Update booking jika ada yang aktif untuk kamar ini pada rentang tanggal masuk
+            Booking::where('kamar_id', $validated['kamar_id'])
+                ->where('status', 'booked')
+                ->whereDate('tanggal_mulai', '<=', $validated['tanggal_masuk'])
+                ->whereDate('tanggal_selesai', '>=', $validated['tanggal_masuk'])
+                ->update([
+                    'status' => 'checkin',
+                    'peserta_id' => $validated['peserta_id'],
+                ]);
 
             // Update status kamar jadi terisi
             $kamar->update(['status' => 'terisi']);

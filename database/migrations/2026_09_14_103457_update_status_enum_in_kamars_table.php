@@ -12,7 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE kamars MODIFY COLUMN status ENUM('kosong', 'terisi', 'rusak') NOT NULL DEFAULT 'kosong'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE kamars MODIFY COLUMN status ENUM('kosong', 'terisi', 'rusak') NOT NULL DEFAULT 'kosong'");
+        }
     }
 
     /**
@@ -20,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE kamars MODIFY COLUMN status ENUM('kosong', 'terisi') NOT NULL DEFAULT 'kosong'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE kamars MODIFY COLUMN status ENUM('kosong', 'terisi') NOT NULL DEFAULT 'kosong'");
+        }
     }
 };
