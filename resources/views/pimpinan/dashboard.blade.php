@@ -129,7 +129,6 @@
                     </div>
                     <div>
                         <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">Tren Okupansi Kamar Asrama (Januari - Desember) {{ $selectedPeriode }} </h3>
-                        <p class="text-xs text-slate-500">Diagram perbandingan 12 bulan: Batang (kamar terpakai per asrama) dan Garis (tingkat okupansi total)</p>
                     </div>
                 </div>
             </div>
