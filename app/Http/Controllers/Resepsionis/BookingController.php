@@ -24,31 +24,42 @@ class BookingController extends Controller
         $user = auth()->user();
         $assignedGedungId = ($user && $user->role === 'resepsionis') ? $user->assignedGedungId() : null;
 
+        $viewMode = $request->get('view', 'harian');
+        if ($request->filled('bulan') && !$request->filled('view')) {
+            $viewMode = 'bulanan';
+        }
+
         // Validasi akses jika resepsionis memiliki gedung penugasan
         if ($assignedGedungId) {
             if (!$request->filled('gedung_id')) {
-                return redirect()->route('resepsionis.booking.index', [
+                return redirect()->route('resepsionis.booking.index', array_filter([
                     'gedung_id' => $assignedGedungId,
                     'tanggal' => $request->get('tanggal', now()->toDateString()),
-                ]);
+                    'view' => $request->get('view'),
+                    'bulan' => $request->get('bulan'),
+                ]));
             }
 
             if ($request->gedung_id != $assignedGedungId) {
                 $assignedGedung = $gedungs->firstWhere('id', $assignedGedungId);
                 $namaGedung = $assignedGedung->nama_gedung ?? 'asrama penugasan Anda';
-                return redirect()->route('resepsionis.booking.index', [
+                return redirect()->route('resepsionis.booking.index', array_filter([
                     'gedung_id' => $assignedGedungId,
                     'tanggal' => $request->get('tanggal', now()->toDateString()),
-                ])->with('warning', "Akses dibatasi. Anda bertugas di {$namaGedung}.");
+                    'view' => $request->get('view'),
+                    'bulan' => $request->get('bulan'),
+                ]))->with('warning', "Akses dibatasi. Anda bertugas di {$namaGedung}.");
             }
         }
 
         // Jika tidak ada gedung_id atau gedung_id tidak valid, arahkan ke gedung pertama
         if (!$request->filled('gedung_id') && $gedungs->isNotEmpty()) {
-            return redirect()->route('resepsionis.booking.index', [
+            return redirect()->route('resepsionis.booking.index', array_filter([
                 'gedung_id' => $gedungs->first()->id,
                 'tanggal' => $request->get('tanggal', now()->toDateString()),
-            ]);
+                'view' => $request->get('view'),
+                'bulan' => $request->get('bulan'),
+            ]));
         }
 
         $selectedGedung = $gedungs->firstWhere('id', $request->gedung_id) ?? $gedungs->first();
@@ -207,6 +218,7 @@ class BookingController extends Controller
                         'instansi' => $activeBooking->instansi ?? '-',
                         'no_telepon' => $activeBooking->no_telepon ?? '-',
                         'diklat' => $activeBooking->diklat->nama_diklat ?? ($activeBooking->peserta->diklat->nama_diklat ?? '-'),
+                        'diklat_id' => $activeBooking->diklat_id ?? ($activeBooking->peserta->diklat_id ?? null),
                         'peserta_id' => $activeBooking->peserta_id,
                         'peserta_nama' => $activeBooking->peserta->nama_peserta ?? null,
                         'tanggal_mulai' => Carbon::parse($activeBooking->tanggal_mulai)->translatedFormat('d M Y'),
@@ -332,9 +344,16 @@ class BookingController extends Controller
             ->orderBy('nama_peserta')
             ->get();
 
-        // Daftar diklat yang akan datang (tanggal mulai belum lewat) beserta peserta yang belum menginap untuk modal form
+        // Daftar diklat yang aktif/akan datang atau yang memiliki booking pada tanggal ini beserta peserta yang belum menginap
         $today = now()->toDateString();
-        $diklats = Diklat::whereDate('tanggal_mulai', '>=', $today)
+        $bookedDiklatIds = $bookings->pluck('diklat_id')->filter()->unique();
+
+        $diklats = Diklat::where(function ($q) use ($today, $bookedDiklatIds) {
+                $q->whereDate('tanggal_selesai', '>=', $today);
+                if ($bookedDiklatIds->isNotEmpty()) {
+                    $q->orWhereIn('id', $bookedDiklatIds);
+                }
+            })
             ->with(['pesertas' => function ($q) {
                 $q->whereDoesntHave('transaksi', function ($q2) {
                     $q2->where('status', 'menginap');
@@ -386,6 +405,236 @@ class BookingController extends Controller
             ];
         })->values();
 
+        // Persiapan Data Riwayat Bulanan (Kalender Bulanan Kamar)
+        $bulanInput = $request->get('bulan');
+        if ($bulanInput && preg_match('/^\d{4}-\d{2}$/', $bulanInput)) {
+            try {
+                $selectedMonthCarbon = Carbon::createFromFormat('Y-m', $bulanInput)->startOfMonth();
+            } catch (\Exception $e) {
+                $selectedMonthCarbon = Carbon::parse($selectedDate)->startOfMonth();
+            }
+        } else {
+            $selectedMonthCarbon = Carbon::parse($selectedDate)->startOfMonth();
+        }
+
+        $selectedMonth = $selectedMonthCarbon->format('Y-m');
+        $prevMonth = $selectedMonthCarbon->copy()->subMonth()->format('Y-m');
+        $nextMonth = $selectedMonthCarbon->copy()->addMonth()->format('Y-m');
+        $namaBulanTahun = $selectedMonthCarbon->translatedFormat('F Y');
+        $daysInMonth = $selectedMonthCarbon->daysInMonth;
+        $startOfMonthStr = $selectedMonthCarbon->copy()->startOfMonth()->toDateString();
+        $endOfMonthStr = $selectedMonthCarbon->copy()->endOfMonth()->toDateString();
+
+        // Ambil transaksi dan booking untuk seluruh bulan pada kamar gedung terpilih
+        $monthlyTransaksis = TransaksiAsrama::whereIn('kamar_id', $kamarIds)
+            ->where(function ($q) use ($startOfMonthStr, $endOfMonthStr) {
+                $q->where(function ($q2) use ($endOfMonthStr) {
+                    $q2->where('status', 'menginap')
+                       ->whereDate('tanggal_masuk', '<=', $endOfMonthStr);
+                })->orWhere(function ($q2) use ($startOfMonthStr, $endOfMonthStr) {
+                    $q2->where('status', 'selesai')
+                       ->whereDate('tanggal_keluar', '>=', $startOfMonthStr)
+                       ->whereDate('tanggal_masuk', '<=', $endOfMonthStr);
+                });
+            })
+            ->with(['peserta.diklat'])
+            ->get();
+
+        $monthlyBookings = Booking::whereIn('kamar_id', $kamarIds)
+            ->where('status', 'booked')
+            ->whereDate('tanggal_mulai', '<=', $endOfMonthStr)
+            ->whereDate('tanggal_selesai', '>=', $startOfMonthStr)
+            ->with(['peserta.diklat', 'diklat'])
+            ->get();
+
+        $monthlyTransaksisByKamar = $monthlyTransaksis->groupBy('kamar_id');
+        $monthlyBookingsByKamar = $monthlyBookings->groupBy('kamar_id');
+
+        $monthlyHistory = [];
+        $totalRoomDaysKosong = 0;
+        $totalRoomDaysTerisi = 0;
+        $totalRoomDaysBooked = 0;
+        $totalRoomDaysRusak = 0;
+
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $currentDayCarbon = $selectedMonthCarbon->copy()->day($day);
+            $currentDayDate = $currentDayCarbon->toDateString();
+
+            $dayRooms = [];
+            $countKosong = 0;
+            $countTerisi = 0;
+            $countBooked = 0;
+            $countRusak = 0;
+
+            foreach ($kamarsRaw as $kamar) {
+                if ($kamar->status === 'rusak') {
+                    $countRusak++;
+                    $dayRooms[] = [
+                        'id' => $kamar->id,
+                        'nomor_kamar' => $kamar->nomor_kamar,
+                        'kapasitas' => $kamar->kapasitas,
+                        'status_kategori' => 'rusak',
+                        'label' => 'Rusak',
+                        'penghuni' => null,
+                        'booking' => null,
+                        'keterangan' => 'Kamar dalam pemeliharaan.',
+                    ];
+                    continue;
+                }
+
+                $kamarTrans = $monthlyTransaksisByKamar->get($kamar->id, collect());
+                $activeOccupants = [];
+                $completedOccupants = [];
+                $occupantList = [];
+
+                foreach ($kamarTrans as $tr) {
+                    $masukDate = Carbon::parse($tr->tanggal_masuk)->toDateString();
+                    $keluarDate = $tr->tanggal_keluar 
+                        ? Carbon::parse($tr->tanggal_keluar)->toDateString() 
+                        : ($tr->peserta && $tr->peserta->diklat ? Carbon::parse($tr->peserta->diklat->tanggal_selesai)->toDateString() : null);
+
+                    $isRelevant = false;
+                    if ($tr->status === 'menginap') {
+                        if ($masukDate <= $currentDayDate && (!$keluarDate || $keluarDate >= $currentDayDate)) {
+                            $isRelevant = true;
+                        }
+                    } elseif ($tr->status === 'selesai') {
+                        if ($keluarDate === $currentDayDate || ($masukDate <= $currentDayDate && $keluarDate >= $currentDayDate)) {
+                            $isRelevant = true;
+                        }
+                    }
+
+                    if ($isRelevant) {
+                        $occupantData = [
+                            'nama' => $tr->peserta->nama_peserta ?? 'Tamu',
+                            'nip' => $tr->peserta->nip_nik ?? '',
+                            'instansi' => $tr->peserta->instansi ?? 'Umum',
+                            'diklat' => $tr->peserta->diklat->nama_diklat ?? 'Program Diklat',
+                            'tanggal_masuk' => Carbon::parse($tr->tanggal_masuk)->translatedFormat('d M Y H:i'),
+                            'tanggal_keluar' => $tr->tanggal_keluar ? Carbon::parse($tr->tanggal_keluar)->translatedFormat('d M Y H:i') : null,
+                            'status' => $tr->status,
+                        ];
+
+                        $occupantList[] = $occupantData;
+                        if ($tr->status === 'menginap') {
+                            $activeOccupants[] = $occupantData;
+                        } else {
+                            $completedOccupants[] = $occupantData;
+                        }
+                    }
+                }
+
+                if (count($activeOccupants) > 0) {
+                    $countTerisi++;
+                    $dayRooms[] = [
+                        'id' => $kamar->id,
+                        'nomor_kamar' => $kamar->nomor_kamar,
+                        'kapasitas' => $kamar->kapasitas,
+                        'status_kategori' => 'terisi',
+                        'label' => 'Terisi (' . count($activeOccupants) . '/' . $kamar->kapasitas . ')',
+                        'penghuni' => $occupantList,
+                        'booking' => null,
+                        'keterangan' => 'Kamar dihuni oleh ' . ($occupantList[0]['nama'] ?? 'Tamu') . ' (' . ($occupantList[0]['diklat'] ?? $occupantList[0]['instansi'] ?? '-') . ')',
+                    ];
+                    continue;
+                }
+
+                if (count($completedOccupants) > 0) {
+                    $countTerisi++;
+                    $dayRooms[] = [
+                        'id' => $kamar->id,
+                        'nomor_kamar' => $kamar->nomor_kamar,
+                        'kapasitas' => $kamar->kapasitas,
+                        'status_kategori' => 'selesai',
+                        'label' => 'Selesai (' . count($completedOccupants) . ' Tamu)',
+                        'penghuni' => $occupantList,
+                        'booking' => null,
+                        'keterangan' => 'Selesai digunakan oleh ' . ($completedOccupants[0]['nama'] ?? 'Tamu'),
+                    ];
+                    continue;
+                }
+
+                $kamarBookings = $monthlyBookingsByKamar->get($kamar->id, collect());
+                $activeBooking = $kamarBookings->first(function ($b) use ($currentDayDate) {
+                    $start = Carbon::parse($b->tanggal_mulai)->toDateString();
+                    $end = Carbon::parse($b->tanggal_selesai)->toDateString();
+                    return $start <= $currentDayDate && $end >= $currentDayDate;
+                });
+
+                if ($activeBooking) {
+                    $countBooked++;
+                    $dayRooms[] = [
+                        'id' => $kamar->id,
+                        'nomor_kamar' => $kamar->nomor_kamar,
+                        'kapasitas' => $kamar->kapasitas,
+                        'status_kategori' => 'booked',
+                        'label' => 'Booked',
+                        'penghuni' => null,
+                        'booking' => [
+                            'id' => $activeBooking->id,
+                            'nama_pemesan' => $activeBooking->nama_pemesan,
+                            'instansi' => $activeBooking->instansi ?? '-',
+                            'no_telepon' => $activeBooking->no_telepon ?? '-',
+                            'diklat' => $activeBooking->diklat->nama_diklat ?? ($activeBooking->peserta->diklat->nama_diklat ?? '-'),
+                            'diklat_id' => $activeBooking->diklat_id ?? ($activeBooking->peserta->diklat_id ?? null),
+                            'peserta_id' => $activeBooking->peserta_id,
+                            'peserta_nama' => $activeBooking->peserta->nama_peserta ?? null,
+                            'tanggal_mulai' => Carbon::parse($activeBooking->tanggal_mulai)->translatedFormat('d M Y'),
+                            'tanggal_selesai' => Carbon::parse($activeBooking->tanggal_selesai)->translatedFormat('d M Y'),
+                            'keterangan' => $activeBooking->keterangan ?? '-',
+                        ],
+                        'keterangan' => 'Dipesan: ' . $activeBooking->nama_pemesan . ' (' . ($activeBooking->diklat->nama_diklat ?? $activeBooking->instansi ?? '-') . ')',
+                    ];
+                    continue;
+                }
+
+                $countKosong++;
+                $dayRooms[] = [
+                    'id' => $kamar->id,
+                    'nomor_kamar' => $kamar->nomor_kamar,
+                    'kapasitas' => $kamar->kapasitas,
+                    'status_kategori' => 'kosong',
+                    'label' => 'Kosong (Tersedia)',
+                    'penghuni' => null,
+                    'booking' => null,
+                    'keterangan' => 'Kamar kosong dan siap dibooking.',
+                ];
+            }
+
+            $totalRoomDaysKosong += $countKosong;
+            $totalRoomDaysTerisi += $countTerisi;
+            $totalRoomDaysBooked += $countBooked;
+            $totalRoomDaysRusak += $countRusak;
+
+            $monthlyHistory[] = [
+                'tanggal' => $currentDayDate,
+                'day_number' => $day,
+                'hari' => $currentDayCarbon->translatedFormat('D'),
+                'hari_lengkap' => $currentDayCarbon->translatedFormat('l'),
+                'formatted' => $currentDayCarbon->translatedFormat('d M Y'),
+                'is_today' => ($currentDayDate === now()->toDateString()),
+                'is_sunday' => $currentDayCarbon->isSunday(),
+                'counts' => [
+                    'kosong' => $countKosong,
+                    'terisi' => $countTerisi,
+                    'booked' => $countBooked,
+                    'rusak' => $countRusak,
+                    'total' => count($kamarsRaw),
+                ],
+                'kamars' => $dayRooms,
+            ];
+        }
+
+        $monthlyStats = [
+            'total_kamar' => count($kamarsRaw),
+            'days_in_month' => $daysInMonth,
+            'total_room_days' => count($kamarsRaw) * $daysInMonth,
+            'total_kosong' => $totalRoomDaysKosong,
+            'total_terisi' => $totalRoomDaysTerisi,
+            'total_booked' => $totalRoomDaysBooked,
+            'total_rusak' => $totalRoomDaysRusak,
+        ];
+
         return view('resepsionis.booking.index', compact(
             'gedungs',
             'selectedGedung',
@@ -396,7 +645,15 @@ class BookingController extends Controller
             'availablePesertas',
             'diklats',
             'diklatsJson',
-            'gedungsJson'
+            'gedungsJson',
+            'viewMode',
+            'selectedMonth',
+            'prevMonth',
+            'nextMonth',
+            'namaBulanTahun',
+            'daysInMonth',
+            'monthlyHistory',
+            'monthlyStats'
         ));
     }
 
@@ -602,7 +859,7 @@ class BookingController extends Controller
                 return back()->with('error', "Peserta {$peserta->nama_peserta} sudah aktif menginap di kamar lain.");
             }
 
-            DB::transaction(function () use ($booking, $kamar, $pesertaId) {
+            DB::transaction(function () use ($booking, $kamar, $pesertaId, $peserta) {
                 TransaksiAsrama::create([
                     'peserta_id' => $pesertaId,
                     'kamar_id' => $booking->kamar_id,
@@ -610,10 +867,14 @@ class BookingController extends Controller
                     'status' => 'menginap',
                 ]);
 
-                $booking->update([
+                $bookingUpdate = [
                     'status' => 'checkin',
                     'peserta_id' => $pesertaId,
-                ]);
+                ];
+                if (!$booking->diklat_id && $peserta && $peserta->diklat_id) {
+                    $bookingUpdate['diklat_id'] = $peserta->diklat_id;
+                }
+                $booking->update($bookingUpdate);
                 $kamar->update(['status' => 'terisi']);
             });
 

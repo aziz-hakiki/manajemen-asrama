@@ -259,6 +259,126 @@ class BookingBatchAndCheckInTest extends TestCase
         $this->assertTrue($gedungIds->contains($gedungB->id));
         $this->assertTrue($gedungIds->contains($gedungC->id));
     }
+
+    public function test_booking_index_provides_diklat_id_in_booked_room_payload_and_diklat_pesertas(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'resepsionis',
+        ]);
+
+        $gedung = Gedung::create(['nama_gedung' => 'Asrama Melati']);
+        $kamar = Kamar::create(['gedung_id' => $gedung->id, 'nomor_kamar' => 'M101', 'kapasitas' => 2, 'status' => 'kosong']);
+
+        $diklat = Diklat::create([
+            'nama_diklat' => 'Diklat Manajemen Risiko',
+            'tanggal_mulai' => now()->toDateString(),
+            'tanggal_selesai' => now()->addDays(3)->toDateString(),
+        ]);
+
+        $peserta = Peserta::create([
+            'diklat_id' => $diklat->id,
+            'nama_peserta' => 'Siti Aminah',
+            'nip_nik' => '198701012010012001',
+            'instansi' => 'BPS',
+        ]);
+
+        $booking = Booking::create([
+            'kamar_id' => $kamar->id,
+            'diklat_id' => $diklat->id,
+            'nama_pemesan' => $diklat->nama_diklat,
+            'tanggal_mulai' => now()->toDateString(),
+            'tanggal_selesai' => now()->addDays(3)->toDateString(),
+            'status' => 'booked',
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('resepsionis.booking.index', [
+            'gedung_id' => $gedung->id,
+            'tanggal' => now()->toDateString(),
+        ]));
+
+        $response->assertStatus(200);
+
+        $kamarsWithStatus = $response->viewData('kamarsWithStatus');
+        $bookedKamar = $kamarsWithStatus->firstWhere('id', $kamar->id);
+
+        $this->assertNotNull($bookedKamar);
+        $this->assertEquals('booked', $bookedKamar['status_kategori']);
+        $this->assertNotNull($bookedKamar['booking']);
+        $this->assertEquals($diklat->id, $bookedKamar['booking']['diklat_id']);
+
+        // Pastikan diklatsJson memuat diklat ini beserta pesertanya
+        $diklatsJson = $response->viewData('diklatsJson');
+        $foundDiklat = collect($diklatsJson)->firstWhere('id', $diklat->id);
+        $this->assertNotNull($foundDiklat);
+        $this->assertCount(1, $foundDiklat['pesertas']);
+        $this->assertEquals($peserta->id, $foundDiklat['pesertas'][0]['id']);
+    }
+
+    public function test_resepsionis_can_view_monthly_room_history_grid(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'resepsionis',
+        ]);
+
+        $gedung = Gedung::create(['nama_gedung' => 'Asrama Melati']);
+        $kamar1 = Kamar::create(['gedung_id' => $gedung->id, 'nomor_kamar' => '101', 'kapasitas' => 2, 'status' => 'kosong']);
+        $kamar2 = Kamar::create(['gedung_id' => $gedung->id, 'nomor_kamar' => '102', 'kapasitas' => 2, 'status' => 'kosong']);
+
+        $diklat = Diklat::create([
+            'nama_diklat' => 'Diklat Manajemen September',
+            'tanggal_mulai' => '2026-09-10',
+            'tanggal_selesai' => '2026-09-15',
+        ]);
+
+        Booking::create([
+            'kamar_id' => $kamar1->id,
+            'diklat_id' => $diklat->id,
+            'nama_pemesan' => 'Rombongan Diklat',
+            'tanggal_mulai' => '2026-09-10',
+            'tanggal_selesai' => '2026-09-15',
+            'status' => 'booked',
+            'user_id' => $user->id,
+        ]);
+
+        // Request view bulanan untuk September 2026
+        $response = $this->actingAs($user)->get(route('resepsionis.booking.index', [
+            'gedung_id' => $gedung->id,
+            'bulan' => '2026-09',
+            'view' => 'bulanan',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('Riwayat Kamar: Asrama Melati');
+        $response->assertSee('September 2026');
+        $response->assertSee('Denah Harian');
+
+        // Pastikan variabel bulanan tersedia
+        $this->assertEquals('bulanan', $response->viewData('viewMode'));
+        $this->assertEquals('2026-09', $response->viewData('selectedMonth'));
+        $this->assertEquals('2026-08', $response->viewData('prevMonth'));
+        $this->assertEquals('2026-10', $response->viewData('nextMonth'));
+
+        $monthlyHistory = $response->viewData('monthlyHistory');
+        // September memiliki 30 hari
+        $this->assertCount(30, $monthlyHistory);
+
+        // Hari ke-10 (index 9) harus memiliki kamar1 dengan status booked
+        $day10 = $monthlyHistory[9];
+        $this->assertEquals('2026-09-10', $day10['tanggal']);
+        $kamar1InDay10 = collect($day10['kamars'])->firstWhere('id', $kamar1->id);
+        $this->assertNotNull($kamar1InDay10);
+        $this->assertEquals('booked', $kamar1InDay10['status_kategori']);
+
+        // Hari ke-1 (index 0) harus memiliki kamar1 dengan status kosong
+        $day1 = $monthlyHistory[0];
+        $this->assertEquals('2026-09-01', $day1['tanggal']);
+        $kamar1InDay1 = collect($day1['kamars'])->firstWhere('id', $kamar1->id);
+        $this->assertNotNull($kamar1InDay1);
+        $this->assertEquals('kosong', $kamar1InDay1['status_kategori']);
+    }
 }
+
+
 
 

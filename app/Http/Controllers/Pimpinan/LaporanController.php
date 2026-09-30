@@ -38,14 +38,19 @@ class LaporanController extends Controller
             ->get();
 
         // Periode Tahun untuk Diagram Kombinasi 12 Bulan (Januari - Desember)
-        $availableYears = range(2026, 2030);
         $currentYear = now()->year;
-        $defaultYear = in_array($currentYear, $availableYears) ? $currentYear : 2026;
-        $selectedPeriode = $request->get('periode', (string) $defaultYear);
-        if (!in_array((int) $selectedPeriode, $availableYears)) {
-            $selectedPeriode = (string) $defaultYear;
+        $inputPeriode = $request->get('periode');
+
+        // Fleksibel tanpa batasan tahun (default tahun berjalan jika tidak diisi atau tidak valid)
+        if ($inputPeriode && is_numeric($inputPeriode) && (int) $inputPeriode > 0) {
+            $year = (int) $inputPeriode;
+        } else {
+            $year = $currentYear;
         }
-        $year = (int) $selectedPeriode;
+        $selectedPeriode = (string) $year;
+
+        // Opsi tahun saran dinamis menyesuaikan tahun terpilih
+        $availableYears = range(min($year - 2, $currentYear - 2), max($year + 5, $currentYear + 5));
 
         $palette = [
             ['bg' => 'rgba(79, 70, 229, 0.85)', 'hover' => 'rgba(67, 56, 202, 1)', 'border' => '#4f46e5'], // Indigo

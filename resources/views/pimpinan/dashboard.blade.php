@@ -145,19 +145,42 @@
                     <span class="font-bold text-emerald-600">{{ $bulanPuncak }}</span>
                 </div>
 
-                <!-- Dropdown Periode Filter -->
-                <form method="GET" action="{{ route('pimpinan.dashboard') }}" class="flex items-center">
-                    <label for="periode-select" class="sr-only">Pilih Tahun</label>
-                    <select 
-                        id="periode-select"
-                        name="periode" 
-                        onchange="this.form.submit()" 
-                        class="text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg py-2 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-2xs transition-colors"
+                <!-- Year Selector like in Receptionist Booking (Unrestricted Year) -->
+                <form method="GET" action="{{ route('pimpinan.dashboard') }}" class="flex items-center gap-1.5">
+                    <a 
+                        href="{{ route('pimpinan.dashboard', ['periode' => (int)$selectedPeriode - 1]) }}" 
+                        class="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-indigo-600 shadow-2xs transition-colors"
+                        title="Tahun Sebelumnya ({{ (int)$selectedPeriode - 1 }})"
                     >
-                        @foreach($availableYears as $year)
-                            <option value="{{ $year }}" {{ $selectedPeriode == (string)$year ? 'selected' : '' }}> Jan - Des {{ $year }}</option>
-                        @endforeach
-                    </select>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                    </a>
+
+                    <div class="flex items-center bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                        <label for="periode-input" class="text-xs text-slate-400 mr-2 font-medium flex items-center gap-1 cursor-pointer">
+                            <span>📅</span>
+                            <span>Tahun:</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="periode-input"
+                            name="periode" 
+                            value="{{ $selectedPeriode }}" 
+                            min="1900"
+                            step="1"
+                            onchange="this.form.submit()" 
+                            onkeydown="if(event.key === 'Enter'){ this.form.submit(); }"
+                            class="text-xs font-semibold text-slate-700 border-none p-0 focus:ring-0 w-16 cursor-pointer"
+                            title="Ketik tahun atau gunakan panah untuk memilih tahun tanpa batas"
+                        >
+                    </div>
+
+                    <a 
+                        href="{{ route('pimpinan.dashboard', ['periode' => (int)$selectedPeriode + 1]) }}" 
+                        class="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-indigo-600 shadow-2xs transition-colors"
+                        title="Tahun Berikutnya ({{ (int)$selectedPeriode + 1 }})"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </a>
                 </form>
             </div>
         </div>
